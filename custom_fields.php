@@ -33,6 +33,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error = "Failed to delete field.";
         }
     }
+
+    if (isset($_POST['edit_field'])) {
+        $id = (int)$_POST['field_id'];
+        $name = mysqli_real_escape_string($conn, trim($_POST['field_name']));
+        $label = mysqli_real_escape_string($conn, trim($_POST['field_label']));
+        $type = mysqli_real_escape_string($conn, $_POST['field_type']);
+        $options = mysqli_real_escape_string($conn, trim($_POST['field_options']));
+        $required = isset($_POST['is_required']) ? 1 : 0;
+
+        $sql = "UPDATE lead_custom_fields SET 
+                field_name = '$name', 
+                field_label = '$label', 
+                field_type = '$type', 
+                field_options = '$options', 
+                is_required = $required 
+                WHERE id = $id AND organization_id = $org_id";
+        
+        if (mysqli_query($conn, $sql)) {
+            $message = "Field updated successfully!";
+        } else {
+            $error = "Failed to update field: " . mysqli_error($conn);
+        }
+    }
 }
 
 $fields_res = mysqli_query($conn, "SELECT * FROM lead_custom_fields WHERE organization_id = $org_id ORDER BY id ASC");
@@ -117,13 +140,18 @@ include 'includes/header.php';
                     <td style="padding: 1rem; font-family: monospace; font-size: 0.75rem; color: var(--text-muted);"><?php echo $row['field_name']; ?></td>
                     <td style="padding: 1rem; text-transform: uppercase; font-size: 0.7rem; font-weight: 700; color: var(--primary);"><?php echo $row['field_type']; ?></td>
                     <td style="padding: 1rem; text-align: right;">
-                        <form action="" method="POST" onsubmit="return confirm('Are you sure? This will delete all data stored in this field for all leads.')">
-                            <input type="hidden" name="field_id" value="<?php echo $row['id']; ?>">
-                            <input type="hidden" name="delete_field" value="1">
-                            <button type="submit" class="btn" style="background: #fee2e2; color: #b91c1c; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">
-                                <i class="fas fa-trash"></i>
+                        <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+                            <button type="button" class="btn" onclick='openEditModal(<?php echo json_encode($row); ?>)' style="background: #f1f5f9; color: var(--primary); width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">
+                                <i class="fas fa-edit"></i>
                             </button>
-                        </form>
+                            <form action="" method="POST" onsubmit="return confirm('Are you sure? This will delete all data stored in this field for all leads.')" style="margin: 0;">
+                                <input type="hidden" name="field_id" value="<?php echo $row['id']; ?>">
+                                <input type="hidden" name="delete_field" value="1">
+                                <button type="submit" class="btn" style="background: #fee2e2; color: #b91c1c; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </form>
+                        </div>
                     </td>
                 </tr>
                 <?php endwhile; ?>
@@ -137,11 +165,72 @@ include 'includes/header.php';
     </div>
 </div>
 
+<!-- Edit Field Modal -->
+<div id="editModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+    <div class="card" style="width: 100%; max-width: 400px; margin: 1rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <h3 style="font-size: 1rem; font-weight: 800; margin: 0;">Edit Custom Field</h3>
+            <button onclick="document.getElementById('editModal').style.display='none'" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-muted);">&times;</button>
+        </div>
+        <form action="" method="POST">
+            <input type="hidden" name="edit_field" value="1">
+            <input type="hidden" name="field_id" id="edit_field_id">
+            <div class="form-group">
+                <label class="form-label" style="font-size: 0.75rem;">Field Label</label>
+                <input type="text" name="field_label" id="edit_field_label" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label" style="font-size: 0.75rem;">Internal Name</label>
+                <input type="text" name="field_name" id="edit_field_name" class="form-control" pattern="[a-zA-Z0-9_]+" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label" style="font-size: 0.75rem;">Field Type</label>
+                <select name="field_type" class="form-control" id="edit_field_type" onchange="toggleEditOptions()">
+                    <option value="text">Text Input</option>
+                    <option value="number">Number</option>
+                    <option value="date">Date</option>
+                    <option value="select">Dropdown (Select)</option>
+                </select>
+            </div>
+            <div class="form-group" id="edit_options_group" style="display: none;">
+                <label class="form-label" style="font-size: 0.75rem;">Dropdown Options (Comma separated)</label>
+                <textarea name="field_options" id="edit_field_options" class="form-control"></textarea>
+            </div>
+            <div class="form-group" style="display: flex; align-items: center; gap: 0.5rem; margin-top: 0.5rem;">
+                <input type="checkbox" name="is_required" id="edit_is_required">
+                <label for="edit_is_required" style="font-size: 0.75rem; font-weight: 600;">Required Field</label>
+            </div>
+            <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                <button type="submit" class="btn btn-primary" style="flex: 1;">Update Field</button>
+                <button type="button" class="btn" style="flex: 1; background: #f1f5f9;" onclick="document.getElementById('editModal').style.display='none'">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <script>
 function toggleOptions() {
     var type = document.getElementById('field_type').value;
     var group = document.getElementById('options_group');
     group.style.display = (type === 'select') ? 'block' : 'none';
+}
+
+function toggleEditOptions() {
+    var type = document.getElementById('edit_field_type').value;
+    var group = document.getElementById('edit_options_group');
+    group.style.display = (type === 'select') ? 'block' : 'none';
+}
+
+function openEditModal(data) {
+    document.getElementById('edit_field_id').value = data.id;
+    document.getElementById('edit_field_label').value = data.field_label;
+    document.getElementById('edit_field_name').value = data.field_name;
+    document.getElementById('edit_field_type').value = data.field_type;
+    document.getElementById('edit_field_options').value = data.field_options;
+    document.getElementById('edit_is_required').checked = data.is_required == 1;
+    
+    toggleEditOptions();
+    document.getElementById('editModal').style.display = 'flex';
 }
 
 document.getElementById('field_label').addEventListener('input', function() {
