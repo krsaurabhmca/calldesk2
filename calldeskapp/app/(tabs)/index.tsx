@@ -106,27 +106,6 @@ export default function Dashboard() {
                             </View>
                         </View>
 
-                        <View style={styles.section}>
-                            <Text style={styles.sectionTitle}>Main Hub</Text>
-                            <View style={styles.hubGrid}>
-                                <TouchableOpacity style={[styles.hubCard, { backgroundColor: '#6366f1' }]} onPress={() => router.push('/leads')}>
-                                    <Users size={24} color="#fff" />
-                                    <Text style={styles.hubLabel}>Leads</Text>
-                                </TouchableOpacity>
-                                <TouchableOpacity style={[styles.hubCard, { backgroundColor: '#10b981' }]} onPress={() => router.push('/reports')}>
-                                    <BarChart3 size={24} color="#fff" />
-                                    <Text style={styles.hubLabel}>Reports</Text>
-                                </TouchableOpacity>
-                                <TouchableOpacity style={[styles.hubCard, { backgroundColor: '#0ea5e9' }]} onPress={() => router.push('/users')}>
-                                    <Users size={24} color="#fff" />
-                                    <Text style={styles.hubLabel}>Team</Text>
-                                </TouchableOpacity>
-                                <TouchableOpacity style={[styles.hubCard, { backgroundColor: '#f59e0b' }]} onPress={() => router.push('/projects')}>
-                                    <Briefcase size={24} color="#fff" />
-                                    <Text style={styles.hubLabel}>Projects</Text>
-                                </TouchableOpacity>
-                            </View>
-                        </View>
 
                         {/* Executive Performance Today */}
                         <View style={styles.section}>
@@ -176,29 +155,6 @@ export default function Dashboard() {
                             )}
                         </View>
 
-                        <View style={styles.section}>
-                            <Text style={styles.sectionTitle}>Quick Actions</Text>
-                            <View style={styles.quickActionsGrid}>
-                                <TouchableOpacity 
-                                    style={styles.actionCard}
-                                    onPress={() => router.push({ pathname: '/leads', params: { showAdd: 'true' } })}
-                                >
-                                    <View style={[styles.actionIcon, { backgroundColor: '#f5f3ff' }]}>
-                                        <UserPlus size={20} color="#6366f1" />
-                                    </View>
-                                    <Text style={styles.actionLabel}>Add Lead</Text>
-                                </TouchableOpacity>
-                                <TouchableOpacity 
-                                    style={styles.actionCard}
-                                    onPress={() => router.push('/calls')}
-                                >
-                                    <View style={[styles.actionIcon, { backgroundColor: '#ecfdf5' }]}>
-                                        <RefreshCcw size={20} color="#10b981" />
-                                    </View>
-                                    <Text style={styles.actionLabel}>Sync Calls</Text>
-                                </TouchableOpacity>
-                            </View>
-                        </View>
                     </View>
                 ) : (
                     /* EXECUTIVE VIEW */
@@ -231,51 +187,7 @@ export default function Dashboard() {
                             </View>
                         </View>
 
-                        <View style={styles.section}>
-                            <Text style={styles.sectionTitle}>Daily Tools</Text>
-                            <View style={styles.hubGrid}>
-                                <TouchableOpacity style={[styles.hubCard, { backgroundColor: '#6366f1' }]} onPress={() => router.push({ pathname: '/leads', params: { showAdd: 'true' } })}>
-                                    <UserPlus size={24} color="#fff" />
-                                    <Text style={styles.hubLabel}>Add Lead</Text>
-                                </TouchableOpacity>
-                                <TouchableOpacity style={[styles.hubCard, { backgroundColor: '#10b981' }]} onPress={() => router.push('/calls')}>
-                                    <RefreshCcw size={24} color="#fff" />
-                                    <Text style={styles.hubLabel}>Sync Calls</Text>
-                                </TouchableOpacity>
-                                <TouchableOpacity style={[styles.hubCard, { backgroundColor: '#f43f5e' }]} onPress={() => router.push('/settings/recording')}>
-                                    <PhoneCall size={24} color="#fff" />
-                                    <Text style={styles.hubLabel}>Recordings</Text>
-                                </TouchableOpacity>
-                                <TouchableOpacity style={[styles.hubCard, { backgroundColor: '#7c3aed' }]} onPress={() => router.push('/messages')}>
-                                    <Zap size={24} color="#fff" />
-                                    <Text style={styles.hubLabel}>Shortcuts</Text>
-                                </TouchableOpacity>
-                            </View>
-                        </View>
 
-                        <View style={styles.section}>
-                            <Text style={styles.sectionTitle}>Quick Actions</Text>
-                            <View style={styles.quickActionsGrid}>
-                                <TouchableOpacity 
-                                    style={styles.actionCard}
-                                    onPress={() => router.push({ pathname: '/leads', params: { showAdd: 'true' } })}
-                                >
-                                    <View style={[styles.actionIcon, { backgroundColor: '#f5f3ff' }]}>
-                                        <UserPlus size={20} color="#6366f1" />
-                                    </View>
-                                    <Text style={styles.actionLabel}>Add Lead</Text>
-                                </TouchableOpacity>
-                                <TouchableOpacity 
-                                    style={styles.actionCard}
-                                    onPress={() => router.push('/calls')}
-                                >
-                                    <View style={[styles.actionIcon, { backgroundColor: '#ecfdf5' }]}>
-                                        <RefreshCcw size={20} color="#10b981" />
-                                    </View>
-                                    <Text style={styles.actionLabel}>Sync Calls</Text>
-                                </TouchableOpacity>
-                            </View>
-                        </View>
                     </View>
                 )}
 
