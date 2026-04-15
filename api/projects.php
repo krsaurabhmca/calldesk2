@@ -10,17 +10,25 @@ if ($method === 'GET') {
     $action = $_GET['action'] ?? 'list';
 
     if ($action === 'list') {
+        $org_id_val = (int)($org_id ?? 0);
+        if ($org_id_val <= 0) {
+            sendResponse(true, 'No projects found (invalid org)', []);
+        }
+
         // Fetch projects
         if ($role === 'admin') {
-            $sql = "SELECT * FROM projects WHERE organization_id = $org_id ORDER BY name ASC";
+            $sql = "SELECT * FROM projects WHERE organization_id = $org_id_val ORDER BY name ASC";
         } else {
             // Non-admins only see projects assigned to them
             $sql = "SELECT p.* FROM projects p 
                     JOIN user_projects up ON p.id = up.project_id 
-                    WHERE up.user_id = $executive_id AND p.organization_id = $org_id 
+                    WHERE up.user_id = $executive_id AND p.organization_id = $org_id_val 
                     ORDER BY p.name ASC";
         }
         $result = mysqli_query($conn, $sql);
+        if (!$result) {
+            sendResponse(false, 'Database Error: ' . mysqli_error($conn), null, 500);
+        }
         $projects = [];
         while ($row = mysqli_fetch_assoc($result)) {
             $projects[] = $row;
@@ -33,14 +41,18 @@ if ($method === 'GET') {
             sendResponse(false, 'Unauthorized', null, 403);
         }
 
+        $org_id_val = (int)($org_id ?? 0);
         $sql = "SELECT u.id, u.name, GROUP_CONCAT(p.name SEPARATOR ', ') as project_names, 
                        GROUP_CONCAT(p.id SEPARATOR ',') as project_ids
                 FROM users u
                 LEFT JOIN user_projects up ON u.id = up.user_id
                 LEFT JOIN projects p ON up.project_id = p.id
-                WHERE u.organization_id = $org_id AND u.status = 1
+                WHERE u.organization_id = $org_id_val AND u.status = 1
                 GROUP BY u.id ORDER BY u.name ASC";
         $result = mysqli_query($conn, $sql);
+        if (!$result) {
+            sendResponse(false, 'Database Error: ' . mysqli_error($conn), null, 500);
+        }
         $assignments = [];
         while ($row = mysqli_fetch_assoc($result)) {
             $assignments[] = $row;
