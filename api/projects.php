@@ -63,14 +63,22 @@ if ($method === 'GET') {
     }
 
 } elseif ($method === 'POST') {
-    $action = $_POST['action'] ?? 'add';
+    // Read JSON body if available
+    $input = json_decode(file_get_contents('php://input'), true);
+    if ($input) {
+        $action = $input['action'] ?? 'add';
+        $post_data = $input;
+    } else {
+        $action = $_POST['action'] ?? 'add';
+        $post_data = $_POST;
+    }
 
     if ($action === 'add') {
         if ($role !== 'admin') {
             sendResponse(false, 'Unauthorized', null, 403);
         }
 
-        $name = mysqli_real_escape_string($conn, $_POST['name'] ?? '');
+        $name = mysqli_real_escape_string($conn, $post_data['name'] ?? '');
         if (empty($name)) {
             sendResponse(false, 'Project name is required', null, 400);
         }
@@ -96,14 +104,13 @@ if ($method === 'GET') {
             sendResponse(false, 'Unauthorized', null, 403);
         }
 
-        $target_user_id = (int)($_POST['user_id'] ?? 0);
-        $project_ids_str = $_POST['project_ids'] ?? ''; // Comma-separated IDs
+        $target_user_id = (int)($post_data['user_id'] ?? 0);
+        $project_ids_str = $post_data['project_ids'] ?? ''; // Comma-separated IDs
 
         if ($target_user_id <= 0) {
             sendResponse(false, 'User ID is required', null, 400);
         }
 
-        // Transactions would be better but simple loops for now
         mysqli_query($conn, "DELETE FROM user_projects WHERE user_id = $target_user_id");
 
         if (!empty($project_ids_str)) {
@@ -115,6 +122,8 @@ if ($method === 'GET') {
         }
 
         sendResponse(true, 'Projects assigned successfully');
+    } else {
+        sendResponse(false, 'Invalid action specified: ' . $action, null, 400);
     }
 
 } elseif ($method === 'DELETE') {
