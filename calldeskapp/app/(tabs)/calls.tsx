@@ -47,7 +47,10 @@ export default function CallsSyncScreen() {
     const [addingLead, setAddingLead] = useState(false);
 
     const [sources, setSources] = useState<any[]>([]);
-    const [selectedSource, setSelectedSource] = useState<number | null>(null);
+    const [selectedSource, setSelectedSource] = useState<number | string>('0');
+    const [projects, setProjects] = useState<any[]>([]);
+    const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
+    const [newLeadRemarks, setNewLeadRemarks] = useState('');
 
     // Audio Playback State
     const [sound, setSound] = useState<Audio.Sound | null>(null);
@@ -73,11 +76,18 @@ export default function CallsSyncScreen() {
             if (execRes.success) setExecutives(execRes.data);
         }
 
-        // Also fetch sources for the add lead modal
-        const sourceRes = await apiCall('sources.php');
+        // Also fetch sources and projects for the add lead modal
+        const [sourceRes, projectRes] = await Promise.all([
+            apiCall('sources.php'),
+            apiCall('projects.php')
+        ]);
+        
         if (sourceRes.success) {
             setSources(sourceRes.data);
-            if (sourceRes.data.length > 0) setSelectedSource(sourceRes.data[0].id);
+            // Don't auto-select source here to allow 'Direct' check logic if needed
+        }
+        if (projectRes.success) {
+            setProjects(projectRes.data);
         }
         setLoading(false);
     };
@@ -180,7 +190,8 @@ export default function CallsSyncScreen() {
             name: newLeadName,
             mobile: newLeadMobile,
             source_id: selectedSource,
-            remarks: 'Added from call logs'
+            project_id: selectedProjectId,
+            remarks: newLeadRemarks || 'Added from call logs'
         });
         setAddingLead(false);
 
@@ -755,24 +766,59 @@ export default function CallsSyncScreen() {
                                 autoFocus
                             />
 
-                            <Text style={styles.label}>Lead Source</Text>
-                            <View style={styles.statusGrid}>
-                                {Array.isArray(sources) && sources.map((source) => {
-                                    if (!source || !source.id) return null;
-                                    return (
+                            <Text style={styles.label}>Lead Category (Project)</Text>
+                            <View style={styles.pickerContainer}>
+                                {projects.length > 0 ? (
+                                    projects.filter((p: any) => p.status === 1 || p.id === selectedProjectId).map((p: any) => (
                                         <TouchableOpacity
-                                            key={source.id}
-                                            style={[
-                                                styles.statusBtn,
-                                                selectedSource === source.id && { backgroundColor: '#6366f1', borderColor: '#6366f1' }
-                                            ]}
-                                            onPress={() => setSelectedSource(source.id)}
+                                            key={p.id}
+                                            style={[styles.pickerItem, selectedProjectId === p.id && styles.pickerItemActive]}
+                                            onPress={() => setSelectedProjectId(p.id)}
                                         >
-                                            <Text style={[styles.statusBtnText, selectedSource === source.id && { color: '#fff' }]}>{source.source_name}</Text>
+                                            <Text style={[styles.pickerText, selectedProjectId === p.id && styles.pickerTextActive]}>
+                                                {p.name}
+                                            </Text>
                                         </TouchableOpacity>
-                                    );
-                                })}
+                                    ))
+                                ) : (
+                                    <Text style={styles.noDataText}>No project categories found.</Text>
+                                )}
                             </View>
+
+                            <Text style={styles.label}>Lead Source</Text>
+                            <View style={styles.pickerContainer}>
+                                {(() => {
+                                    const sourceList = [...(Array.isArray(sources) ? sources : [])].filter((s: any) => s.status === 1 || s.id === selectedSource);
+                                    if (!sourceList.find(s => s.source_name === 'Direct')) {
+                                        sourceList.unshift({ id: 'Direct', source_name: 'Direct' });
+                                    }
+                                    return sourceList.map((s: any) => {
+                                        if (!s || !s.id) return null;
+                                        const sId = s.id.toString();
+                                        return (
+                                            <TouchableOpacity
+                                                key={sId}
+                                                style={[styles.pickerItem, selectedSource.toString() === sId && styles.pickerItemActive]}
+                                                onPress={() => setSelectedSource(sId)}
+                                            >
+                                                <Text style={[styles.pickerText, selectedSource.toString() === sId && styles.pickerTextActive]}>
+                                                    {s.source_name}
+                                                </Text>
+                                            </TouchableOpacity>
+                                        );
+                                    });
+                                })()}
+                            </View>
+
+                            <Text style={styles.label}>Initial Remarks</Text>
+                            <TextInput
+                                style={[styles.input, styles.textArea]}
+                                placeholder="Any notes from the call..."
+                                value={newLeadRemarks}
+                                onChangeText={setNewLeadRemarks}
+                                multiline
+                                numberOfLines={3}
+                            />
 
                             <TouchableOpacity
                                 style={[styles.submitBtn, addingLead && { opacity: 0.7 }]}
@@ -1161,8 +1207,41 @@ const styles = StyleSheet.create({
         color: '#1e293b',
     },
     textArea: {
-        height: 60,
+        height: 80,
         textAlignVertical: 'top',
+        paddingTop: 12,
+    },
+    pickerContainer: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        gap: 8,
+        marginBottom: 10,
+    },
+    pickerItem: {
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+        borderRadius: 20,
+        backgroundColor: '#f1f5f9',
+        borderWidth: 1,
+        borderColor: '#e2e8f0',
+    },
+    pickerItemActive: {
+        backgroundColor: '#6366f1',
+        borderColor: '#6366f1',
+    },
+    pickerText: {
+        fontSize: 12,
+        fontWeight: '600',
+        color: '#64748b',
+    },
+    pickerTextActive: {
+        color: '#fff',
+    },
+    noDataText: {
+        fontSize: 12,
+        color: '#94a3b8',
+        fontStyle: 'italic',
+        paddingVertical: 10,
     },
     historyContainer: {
         backgroundColor: '#f1f5f9',
