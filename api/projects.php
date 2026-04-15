@@ -61,11 +61,20 @@ if ($method === 'GET') {
             sendResponse(false, 'Project name is required', null, 400);
         }
 
-        $sql = "INSERT INTO projects (organization_id, name) VALUES ($org_id, '$name')";
+        $org_id_val = (int)($org_id ?? 0);
+        if ($org_id_val <= 0) {
+             sendResponse(false, 'Organization ID is missing. Please contact support.', null, 400);
+        }
+
+        $sql = "INSERT INTO projects (organization_id, name) VALUES ($org_id_val, '$name')";
         if (mysqli_query($conn, $sql)) {
             sendResponse(true, 'Project added successfully', ['id' => mysqli_insert_id($conn)]);
         } else {
-            sendResponse(false, 'Error adding project: ' . mysqli_error($conn), null, 500);
+            $error = mysqli_error($conn);
+            if (strpos($error, 'Duplicate entry') !== false) {
+                sendResponse(false, 'A project with this name already exists in your organization.', null, 400);
+            }
+            sendResponse(false, 'Error adding project: ' . $error, null, 500);
         }
 
     } elseif ($action === 'assign') {
