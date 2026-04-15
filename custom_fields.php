@@ -67,11 +67,11 @@ include 'includes/header.php';
             <input type="hidden" name="add_field" value="1">
             <div class="form-group">
                 <label class="form-label" style="font-size: 0.75rem;">Field Label (Visible to users)</label>
-                <input type="text" name="field_label" class="form-control" placeholder="e.g. Budget Range" required>
+                <input type="text" name="field_label" id="field_label" class="form-control" placeholder="e.g. Budget Range" required>
             </div>
             <div class="form-group">
                 <label class="form-label" style="font-size: 0.75rem;">Internal Name (A-Z, no spaces)</label>
-                <input type="text" name="field_name" class="form-control" placeholder="e.g. budget_range" pattern="[a-zA-Z0-9_]+" required>
+                <input type="text" name="field_name" id="field_name" class="form-control" placeholder="e.g. budget_range" pattern="[a-zA-Z0-9_]+" required>
             </div>
             <div class="form-group">
                 <label class="form-label" style="font-size: 0.75rem;">Field Type</label>
@@ -143,6 +143,19 @@ function toggleOptions() {
     var group = document.getElementById('options_group');
     group.style.display = (type === 'select') ? 'block' : 'none';
 }
+
+document.getElementById('field_label').addEventListener('input', function() {
+    var label = this.value;
+    var nameField = document.getElementById('field_name');
+    
+    // Generate slug: lowercase, replace non-alphanumeric with underscore, remove duplicate underscores
+    var slug = label.toLowerCase()
+                    .replace(/[^a-z0-9]/g, '_')
+                    .replace(/_+/g, '_')
+                    .replace(/^_|_$/g, '');
+    
+    nameField.value = slug;
+});
 </script>
 
 <?php include 'includes/footer.php'; ?>
