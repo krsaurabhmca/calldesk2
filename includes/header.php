@@ -85,6 +85,9 @@ $current_page = basename($_SERVER['PHP_SELF']);
                 <a href="<?php echo BASE_URL; ?>sources.php" class="nav-link <?php echo $current_page == 'sources.php' ? 'active' : ''; ?>">
                     <i class="fas fa-layer-group"></i> <span>Lead Sources</span>
                 </a>
+                <a href="<?php echo BASE_URL; ?>projects.php" class="nav-link <?php echo $current_page == 'projects.php' ? 'active' : ''; ?>">
+                    <i class="fas fa-folder-tree"></i> <span>Project Categories</span>
+                </a>
                 <a href="<?php echo BASE_URL; ?>users.php" class="nav-link <?php echo $current_page == 'users.php' ? 'active' : ''; ?>">
                     <i class="fas fa-user-gear"></i> <span>Team Access</span>
                 </a>

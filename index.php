@@ -303,7 +303,7 @@ include 'includes/header.php';
             </a>
         </div>
 
-        <!-- Quick Stats breakdown -->
+        <!-- Lead Breakdown -->
         <div class="section-card" style="padding:1.25rem;">
             <h3 style="font-size:.875rem;font-weight:800;color:#1e293b;margin:0 0 1rem;"><i class="fas fa-chart-pie" style="color:#f59e0b;margin-right:.5rem;"></i>Lead Breakdown</h3>
             <?php
@@ -325,6 +325,32 @@ include 'includes/header.php';
                 </div>
             </div>
             <?php endforeach; ?>
+        </div>
+
+        <!-- Project Breakdown -->
+        <div class="section-card" style="padding:1.25rem;">
+            <h3 style="font-size:.875rem;font-weight:800;color:#1e293b;margin:0 0 1rem;"><i class="fas fa-folder-tree" style="color:#0ea5e9;margin-right:.5rem;"></i>Project Breakdown</h3>
+            <?php
+            $r = mysqli_query($conn, "SELECT p.name, COUNT(l.id) as count 
+                                     FROM projects p 
+                                     LEFT JOIN leads l ON p.id = l.project_id AND l.organization_id = $org_id
+                                     WHERE p.organization_id = $org_id 
+                                     GROUP BY p.id ORDER BY count DESC LIMIT 5");
+            while ($p = mysqli_fetch_assoc($r)):
+                if (empty($p['name'])) continue;
+                $total_l = max(1, $stats['total_leads']);
+                $pct = round($p['count']/$total_l*100);
+            ?>
+            <div style="margin-bottom:.875rem;">
+                <div style="display:flex;justify-content:space-between;font-size:.75rem;margin-bottom:.3rem;">
+                    <span style="font-weight:700;color:#374151;"><?= $p['name'] ?></span>
+                    <span style="font-weight:800;color:#0ea5e9;"><?= $p['count'] ?></span>
+                </div>
+                <div style="background:#f1f5f9;border-radius:4px;height:5px;overflow:hidden;">
+                    <div style="width:<?= $pct ?>%;height:100%;background:#0ea5e9;border-radius:4px;"></div>
+                </div>
+            </div>
+            <?php endwhile; ?>
         </div>
 
         <!-- Upcoming Tasks -->

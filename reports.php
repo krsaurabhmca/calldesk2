@@ -19,13 +19,20 @@ if ($start_date) {
 if ($end_date) {
     $where .= " AND DATE(l.created_at) <= '$end_date'";
 }
+$project_filter = isset($_GET['project_id']) ? (int)$_GET['project_id'] : 0;
+if ($project_filter > 0) {
+    $where .= " AND l.project_id = $project_filter";
+}
 
-$sql = "SELECT l.*, u.name as executive_name, s.source_name 
+$sql = "SELECT l.*, u.name as executive_name, s.source_name, p.name as project_name 
         FROM leads l 
         LEFT JOIN users u ON l.assigned_to = u.id 
         LEFT JOIN lead_sources s ON l.source_id = s.id 
+        LEFT JOIN projects p ON l.project_id = p.id
         $where ORDER BY l.id DESC";
 $result = mysqli_query($conn, $sql);
+
+$projects_list = mysqli_query($conn, "SELECT id, name FROM projects WHERE organization_id = $org_id ORDER BY name ASC");
 
 include 'includes/header.php';
 ?>
@@ -56,6 +63,15 @@ include 'includes/header.php';
             <label class="form-label">To Date</label>
             <input type="date" name="end_date" class="form-control" value="<?php echo $end_date; ?>">
         </div>
+        <div>
+            <label class="form-label">Project Category</label>
+            <select name="project_id" class="form-control">
+                <option value="">All Categories</option>
+                <?php while ($pr = mysqli_fetch_assoc($projects_list)): ?>
+                    <option value="<?php echo $pr['id']; ?>" <?php echo $project_filter == $pr['id'] ? 'selected' : ''; ?>><?php echo $pr['name']; ?></option>
+                <?php endwhile; ?>
+            </select>
+        </div>
         <div style="display: flex; align-items: flex-end;">
             <button type="submit" class="btn btn-primary">Generate</button>
         </div>
@@ -70,6 +86,7 @@ include 'includes/header.php';
                     <th>Lead Name</th>
                     <th>Mobile</th>
                     <th>Source</th>
+                    <th>Category</th>
                     <th>Status</th>
                     <th>Assigned To</th>
                     <th>Created At</th>
@@ -81,6 +98,7 @@ include 'includes/header.php';
                     <td><strong><?php echo $row['name']; ?></strong></td>
                     <td><?php echo $row['mobile']; ?></td>
                     <td><?php echo $row['source_name'] ?: 'N/A'; ?></td>
+                    <td><span style="font-size: 0.75rem; font-weight: 600; color: #64748b;"><?php echo $row['project_name'] ?: 'N/A'; ?></span></td>
                     <td><span class="badge badge-<?php echo strtolower(str_replace(' ', '', $row['status'])); ?>"><?php echo $row['status']; ?></span></td>
                     <td><?php echo $row['executive_name'] ?: 'Unassigned'; ?></td>
                     <td><?php echo date('d M, Y', strtotime($row['created_at'])); ?></td>

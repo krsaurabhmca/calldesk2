@@ -17,10 +17,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $source_id = !empty($_POST['source_id']) ? (int)$_POST['source_id'] : "NULL";
     $status = mysqli_real_escape_string($conn, $_POST['status']);
     $assigned_to = !empty($_POST['assigned_to']) ? (int)$_POST['assigned_to'] : "NULL";
+    $project_id = !empty($_POST['project_id']) ? (int)$_POST['project_id'] : "NULL";
     $remarks = mysqli_real_escape_string($conn, $_POST['remarks']);
 
-    $sql = "INSERT INTO leads (organization_id, name, mobile, source_id, status, assigned_to, remarks) 
-            VALUES ($org_id, '$name', '$mobile', $source_id, '$status', $assigned_to, '$remarks')";
+    $sql = "INSERT INTO leads (organization_id, name, mobile, source_id, project_id, status, assigned_to, remarks) 
+            VALUES ($org_id, '$name', '$mobile', $source_id, $project_id, '$status', $assigned_to, '$remarks')";
     
     try {
         if (mysqli_query($conn, $sql)) {
@@ -48,6 +49,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $org_id = getOrgId();
 $users_result = mysqli_query($conn, "SELECT id, name FROM users WHERE organization_id = $org_id AND status = 1 ORDER BY name ASC");
 $sources_result = mysqli_query($conn, "SELECT id, source_name FROM lead_sources WHERE organization_id = $org_id ORDER BY source_name ASC");
+$projects_result = mysqli_query($conn, "SELECT id, name FROM projects WHERE organization_id = $org_id ORDER BY name ASC");
 
 include 'includes/header.php';
 ?>
@@ -92,6 +94,18 @@ include 'includes/header.php';
                         <option value="Interested">Interested</option>
                         <option value="Converted">Converted</option>
                         <option value="Lost">Lost</option>
+                    </select>
+                </div>
+                <div class="form-group" style="grid-column: span 2;">
+                    <label class="form-label">Project / Category</label>
+                    <select name="project_id" class="form-control">
+                        <option value="">-- Select Category --</option>
+                        <?php 
+                        mysqli_data_seek($projects_result, 0);
+                        while ($p = mysqli_fetch_assoc($projects_result)): 
+                        ?>
+                            <option value="<?php echo $p['id']; ?>"><?php echo $p['name']; ?></option>
+                        <?php endwhile; ?>
                     </select>
                 </div>
                 <?php if (isAdmin()): ?>
