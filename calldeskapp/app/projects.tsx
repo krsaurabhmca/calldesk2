@@ -5,6 +5,7 @@ import { apiCall } from '../services/api';
 import { getUser } from '../services/auth';
 import { useRouter } from 'expo-router';
 import { useSnackbar } from '../context/SnackbarContext';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function ProjectManagement() {
     const { showSnackbar } = useSnackbar();
@@ -151,7 +152,7 @@ export default function ProjectManagement() {
     }
 
     return (
-        <View style={styles.container}>
+        <SafeAreaView style={styles.container}>
             <View style={styles.header}>
                 <View>
                     <Text style={styles.title}>Project Categories</Text>
@@ -303,7 +304,7 @@ export default function ProjectManagement() {
                     </View>
                 </View>
             </Modal>
-        </View>
+        </SafeAreaView>
     );
 }
 

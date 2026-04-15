@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, RefreshControl } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { UserCog, MessageSquare, ChevronRight, User, Phone, LogOut, Info, Settings, BarChart3, Flag } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { getUser, logout } from '../../services/auth';
@@ -56,11 +57,12 @@ export default function MoreScreen() {
     };
 
     return (
-        <ScrollView
-            style={styles.container}
-            contentContainerStyle={{ paddingBottom: 40 }}
-            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-        >
+        <SafeAreaView style={styles.container}>
+            <ScrollView
+                style={{ flex: 1 }}
+                contentContainerStyle={{ paddingBottom: 40 }}
+                refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+            >
             {/* Profile Header */}
             <View style={styles.header}>
                 <View style={styles.profileBox}>
@@ -150,8 +152,8 @@ export default function MoreScreen() {
                     <LogOut size={20} color="#ef4444" />
                     <Text style={styles.logoutText}>Logout Session</Text>
                 </TouchableOpacity>
-            </View>
-        </ScrollView>
+            </ScrollView>
+        </SafeAreaView>
     );
 }
 
