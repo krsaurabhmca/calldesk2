@@ -499,15 +499,7 @@ export default function LeadsScreen() {
                                 maxLength={10}
                             />
 
-                            <Text style={styles.label}>Project Name (Note)</Text>
-                            <TextInput
-                                style={styles.input}
-                                placeholder="Specific property or unit name"
-                                value={newProject}
-                                onChangeText={setNewProject}
-                            />
-
-                            <Text style={styles.label}>Lead Category / Project (Optional)</Text>
+                            <Text style={styles.label}>Lead Category (Select)</Text>
                             <View style={styles.pickerContainer}>
                                 {projects.length > 0 ? (
                                     projects.map((p: any) => (
