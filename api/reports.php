@@ -9,52 +9,23 @@ if ($auth_user['role'] !== 'admin') {
 $org_id = $auth_user['organization_id'];
 $action = $_GET['action'] ?? 'summary';
 
-if ($action === 'summary') {
-    // Lead Status Distribution
-    $sql = "SELECT COALESCE(status, 'New') as status, COUNT(*) as count 
-            FROM leads 
-            WHERE organization_id = $org_id 
-            GROUP BY status";
-    $status_res = mysqli_query($conn, $sql);
-    $status_data = [];
-    while($row = mysqli_fetch_assoc($status_res)) {
-        $status_data[] = $row;
-    }
-
-    // Source Distribution
-    $sql = "SELECT s.id, s.source_name, COUNT(l.id) as count 
-            FROM lead_sources s 
-            LEFT JOIN leads l ON s.id = l.source_id AND l.organization_id = $org_id
-            WHERE s.organization_id = $org_id
-            GROUP BY s.id";
-    $source_res = mysqli_query($conn, $sql);
-    $source_data = [];
-    while($row = mysqli_fetch_assoc($source_res)) {
-        $source_data[] = $row;
-    }
-
-    // Team Performance (Last 30 days)
-    $sql = "SELECT u.id, u.name, 
-            (SELECT COUNT(*) FROM leads l WHERE l.assigned_to = u.id AND l.organization_id = $org_id) as total_leads,
-            (SELECT COUNT(*) FROM call_logs c WHERE c.executive_id = u.id AND c.organization_id = $org_id) as total_calls,
-            (SELECT COUNT(*) FROM follow_ups f WHERE f.executive_id = u.id AND f.organization_id = $org_id) as total_followups
-            FROM users u 
-            WHERE u.organization_id = $org_id AND u.role = 'executive'
-            GROUP BY u.id";
-    $team_res = mysqli_query($conn, $sql);
-    $team_data = [];
-    while($row = mysqli_fetch_assoc($team_res)) {
-        // Ensure numeric values are returned as strings/ints correctly
-        $row['total_leads'] = (string)($row['total_leads'] ?? '0');
-        $row['total_calls'] = (string)($row['total_calls'] ?? '0');
-        $row['total_followups'] = (string)($row['total_followups'] ?? '0');
-        $team_data[] = $row;
+    // Category/Project Distribution
+    $sql = "SELECT p.id, p.name as category_name, COUNT(l.id) as count 
+            FROM projects p 
+            LEFT JOIN leads l ON p.id = l.project_id AND l.organization_id = $org_id
+            WHERE p.organization_id = $org_id
+            GROUP BY p.id";
+    $proj_res = mysqli_query($conn, $sql);
+    $proj_data = [];
+    while($row = mysqli_fetch_assoc($proj_res)) {
+        $proj_data[] = $row;
     }
 
     sendResponse(true, 'Reports fetched', [
         'status_distribution' => $status_data,
         'source_distribution' => $source_data,
-        'team_performance' => $team_data
+        'team_performance' => $team_data,
+        'category_distribution' => $proj_data
     ]);
 } elseif ($action === 'business_calls_report') {
     $sql = "SELECT 

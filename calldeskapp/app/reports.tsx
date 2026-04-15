@@ -16,7 +16,7 @@ export default function ReportsScreen() {
     const [error, setError] = useState<string | null>(null);
     const [refreshing, setRefreshing] = useState(false);
     const [userRole, setUserRole] = useState<string | null>(null);
-    const [activeReport, setActiveReport] = useState<'summary' | 'business'>('summary');
+    const [activeReport, setActiveReport] = useState<'summary' | 'business' | 'category'>('summary');
     const [businessData, setBusinessData] = useState<any[]>([]);
     const [loadingBusiness, setLoadingBusiness] = useState(false);
 
@@ -150,6 +150,13 @@ export default function ReportsScreen() {
         }]
     };
 
+    const categoryData = {
+        labels: (data?.category_distribution || []).map((item: any) => item.category_name || 'Other'),
+        datasets: [{
+            data: (data?.category_distribution || []).map((item: any) => parseInt(item.count) || 0)
+        }]
+    };
+
     if (!data) {
         return (
             <SafeAreaView style={styles.safeContainer}>
@@ -176,11 +183,18 @@ export default function ReportsScreen() {
                     <Text style={[styles.tabText, activeReport === 'summary' && styles.activeTabText]}>Overview</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
+                    style={[styles.tab, activeReport === 'category' && styles.activeTab]}
+                    onPress={() => setActiveReport('category')}
+                >
+                    <BarIcon size={16} color={activeReport === 'category' ? '#fff' : '#64748b'} />
+                    <Text style={[styles.tabText, activeReport === 'category' && styles.activeTabText]}>Categories</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
                     style={[styles.tab, activeReport === 'business' && styles.activeTab]}
                     onPress={() => setActiveReport('business')}
                 >
                     <Phone size={16} color={activeReport === 'business' ? '#fff' : '#64748b'} />
-                    <Text style={[styles.tabText, activeReport === 'business' && styles.activeTabText]}>Business Calls</Text>
+                    <Text style={[styles.tabText, activeReport === 'business' && styles.activeTabText]}>Business</Text>
                 </TouchableOpacity>
             </View>
 
@@ -194,7 +208,9 @@ export default function ReportsScreen() {
                         {/* Pipeline Status */}
                         <View style={styles.card}>
                             <View style={styles.cardHeader}>
-                                <PieIcon size={20} color="#6366f1" />
+                                <View style={[styles.iconBox, { backgroundColor: '#f5f3ff' }]}>
+                                    <PieIcon size={18} color="#6366f1" />
+                                </View>
                                 <Text style={styles.cardTitle}>Lead Pipeline Status</Text>
                             </View>
                             {pieData && pieData.length > 0 ? (
@@ -215,7 +231,9 @@ export default function ReportsScreen() {
                         {/* Team Performance */}
                         <View style={styles.card}>
                             <View style={styles.cardHeader}>
-                                <BarIcon size={20} color="#6366f1" />
+                                <View style={[styles.iconBox, { backgroundColor: '#ecfdf5' }]}>
+                                    <BarIcon size={18} color="#10b981" />
+                                </View>
                                 <Text style={styles.cardTitle}>Calls by Executive</Text>
                             </View>
                             {barData.labels.length > 0 ? (
@@ -237,7 +255,9 @@ export default function ReportsScreen() {
                         {validTeamData.map((item: any) => (
                             <View key={item.id || item.name} style={styles.performanceRow}>
                                 <View style={styles.execInfo}>
-                                    <Users size={18} color="#94a3b8" />
+                                    <View style={styles.execAvatarTiny}>
+                                        <Text style={styles.execAvatarTextTiny}>{(item.name || 'U').charAt(0)}</Text>
+                                    </View>
                                     <Text style={styles.execName}>{item.name}</Text>
                                 </View>
                                 <View style={styles.stats}>
@@ -250,8 +270,47 @@ export default function ReportsScreen() {
                                 </View>
                             </View>
                         ))}
-                        {validTeamData.length === 0 && <Text style={styles.empty}>No team data</Text>}
                     </>
+                ) : activeReport === 'category' ? (
+                    <View style={styles.categoryReportContainer}>
+                        <View style={styles.card}>
+                            <View style={styles.cardHeader}>
+                                <View style={[styles.iconBox, { backgroundColor: '#fff7ed' }]}>
+                                    <TrendingUp size={18} color="#f59e0b" />
+                                </View>
+                                <Text style={styles.cardTitle}>Leads by Category</Text>
+                            </View>
+                            {categoryData.labels.length > 0 ? (
+                                <BarChart
+                                    style={{ marginVertical: 8, borderRadius: 16 }}
+                                    data={categoryData}
+                                    width={screenWidth - 64}
+                                    height={220}
+                                    yAxisLabel=""
+                                    yAxisSuffix=""
+                                    chartConfig={{
+                                        ...chartConfig,
+                                        color: (opacity = 1) => `rgba(245, 158, 11, ${opacity})`,
+                                    }}
+                                    verticalLabelRotation={30}
+                                />
+                            ) : <Text style={styles.empty}>No categorised leads found</Text>}
+                        </View>
+
+                        <Text style={styles.sectionTitle}>Category Breakdown</Text>
+                        {(data?.category_distribution || []).map((item: any) => (
+                            <View key={item.id} style={styles.categoryRow}>
+                                <View style={styles.catInfo}>
+                                    <View style={styles.dot} />
+                                    <Text style={styles.catName}>{item.category_name || 'Unassigned'}</Text>
+                                </View>
+                                <View style={styles.catCount}>
+                                    <Text style={styles.countNumber}>{item.count}</Text>
+                                    <Text style={styles.countText}> Leads</Text>
+                                </View>
+                            </View>
+                        ))}
+                    </View>
                 ) : (
                     <View style={styles.businessReportContainer}>
                         <View style={styles.reportHeader}>
@@ -503,6 +562,17 @@ const styles = StyleSheet.create({
         fontWeight: '700',
         color: '#64748b',
     },
+    iconBox: { width: 32, height: 32, borderRadius: 10, justifyContent: 'center', alignItems: 'center' },
+    categoryReportContainer: { paddingTop: 8 },
+    categoryRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#fff', padding: 16, borderRadius: 16, marginBottom: 8, borderWidth: 1, borderColor: '#f1f5f9' },
+    catInfo: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+    dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#f59e0b' },
+    catName: { fontSize: 15, fontWeight: '700', color: '#1e293b' },
+    catCount: { flexDirection: 'row', alignItems: 'center' },
+    countNumber: { fontSize: 16, fontWeight: '900', color: '#0f172a' },
+    countText: { fontSize: 12, color: '#94a3b8', fontWeight: '600' },
+    execAvatarTiny: { width: 28, height: 28, borderRadius: 8, backgroundColor: '#f8fafc', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#f1f5f9' },
+    execAvatarTextTiny: { fontSize: 12, fontWeight: '800', color: '#6366f1' },
     errorText: {
         fontSize: 18,
         fontWeight: '800',
