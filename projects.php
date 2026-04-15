@@ -7,9 +7,13 @@ if ($role !== 'admin') {
     exit();
 }
 
-$org_id = $_SESSION['organization_id'];
+$org_id = getOrgId();
 $success = '';
 $error = '';
+
+if (!$org_id) {
+    die("Invalid session. Please login again.");
+}
 
 // Handle Add Project
 if (isset($_POST['add_project'])) {
@@ -22,7 +26,7 @@ if (isset($_POST['add_project'])) {
             if (mysqli_errno($conn) == 1062) {
                 $error = "This project category already exists.";
             } else {
-                $error = "Failed to add project.";
+                $error = "Failed to add project: " . mysqli_error($conn);
             }
         }
     }

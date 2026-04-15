@@ -12,6 +12,10 @@ $status_filter = isset($_GET['status']) ? mysqli_real_escape_string($conn, $_GET
 $project_filter = isset($_GET['project_id']) ? (int)$_GET['project_id'] : 0;
 
 $org_id = getOrgId();
+if (!$org_id) {
+    die("Invalid session. Please login again.");
+}
+
 $where = "WHERE l.organization_id = $org_id";
 if ($role !== 'admin') {
     $where .= " AND assigned_to = $user_id";
@@ -35,6 +39,7 @@ $sql = "SELECT l.*, u.name as executive_name, s.source_name, p.name as project_n
 $result = mysqli_query($conn, $sql);
 
 $projects_list = mysqli_query($conn, "SELECT id, name FROM projects WHERE organization_id = $org_id ORDER BY name ASC");
+if (!$projects_list) $projects_list = false;
 
 include 'includes/header.php';
 ?>
@@ -67,9 +72,11 @@ include 'includes/header.php';
         <div style="width: 150px;">
             <select name="project_id" class="form-control" style="background: #fafbfc;">
                 <option value="">All Categories</option>
-                <?php while ($pr = mysqli_fetch_assoc($projects_list)): ?>
-                    <option value="<?php echo $pr['id']; ?>" <?php echo $project_filter == $pr['id'] ? 'selected' : ''; ?>><?php echo $pr['name']; ?></option>
-                <?php endwhile; ?>
+                <?php if ($projects_list): ?>
+                    <?php while ($pr = mysqli_fetch_assoc($projects_list)): ?>
+                        <option value="<?php echo $pr['id']; ?>" <?php echo $project_filter == $pr['id'] ? 'selected' : ''; ?>><?php echo $pr['name']; ?></option>
+                    <?php endwhile; ?>
+                <?php endif; ?>
             </select>
         </div>
         <button type="submit" class="btn btn-primary" style="padding: 0 1.25rem;">Filter</button>
@@ -125,7 +132,7 @@ include 'includes/header.php';
                 <?php endwhile; ?>
                 <?php if (mysqli_num_rows($result) === 0): ?>
                     <tr>
-                        <td colspan="6" style="text-align: center; padding: 4rem; color: var(--text-muted);">
+                        <td colspan="7" style="text-align: center; padding: 4rem; color: var(--text-muted);">
                             <i class="fas fa-search" style="font-size: 2rem; opacity: 0.2; margin-bottom: 1rem; display: block;"></i>
                             No leads found matching your criteria.
                         </td>

@@ -47,10 +47,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             header("Location: lead_view.php?id=$lead_id&success=1");
             exit();
         } else {
-            $error = "Failed to update lead.";
+            $error = "Failed to update lead: " . mysqli_error($conn);
         }
-    } catch (mysqli_sql_exception $e) {
-        if ($e->getCode() == 1062) {
+    } catch (Throwable $e) {
+        if (method_exists($e, 'getCode') && $e->getCode() == 1062) {
             $error = "Another lead with this mobile number already exists in your organization.";
         } else {
             $error = "Error: " . $e->getMessage();
@@ -58,9 +58,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-$users_result = mysqli_query($conn, "SELECT id, name FROM users WHERE organization_id = $org_id AND status = 1 ORDER BY name ASC");
-$sources_result = mysqli_query($conn, "SELECT id, source_name FROM lead_sources WHERE organization_id = $org_id AND (status = 1 OR id = " . ($lead['source_id'] ?: 0) . ") ORDER BY source_name ASC");
-$projects_result = mysqli_query($conn, "SELECT id, name FROM projects WHERE organization_id = $org_id AND (status = 1 OR id = " . ($lead['project_id'] ?: 0) . ") ORDER BY name ASC");
+if ($org_id) {
+    $users_result = mysqli_query($conn, "SELECT id, name FROM users WHERE organization_id = $org_id AND status = 1 ORDER BY name ASC");
+    $sources_result = mysqli_query($conn, "SELECT id, source_name FROM lead_sources WHERE organization_id = $org_id AND (status = 1 OR id = " . ($lead['source_id'] ?: 0) . ") ORDER BY source_name ASC");
+    $projects_result = mysqli_query($conn, "SELECT id, name FROM projects WHERE organization_id = $org_id AND (status = 1 OR id = " . ($lead['project_id'] ?: 0) . ") ORDER BY name ASC");
+} else {
+    $users_result = $sources_result = $projects_result = false;
+    if (!$error) $error = "Invalid session. Please login again.";
+}
 
 include 'includes/header.php';
 ?>
@@ -92,9 +97,11 @@ include 'includes/header.php';
                     <label class="form-label">Lead Source</label>
                     <select name="source_id" class="form-control" required>
                         <option value="">-- Select Source --</option>
-                        <?php while ($s = mysqli_fetch_assoc($sources_result)): ?>
-                            <option value="<?php echo $s['id']; ?>" <?php echo $lead['source_id'] == $s['id'] ? 'selected' : ''; ?>><?php echo $s['source_name']; ?></option>
-                        <?php endwhile; ?>
+                        <?php if ($sources_result): ?>
+                            <?php while ($s = mysqli_fetch_assoc($sources_result)): ?>
+                                <option value="<?php echo $s['id']; ?>" <?php echo $lead['source_id'] == $s['id'] ? 'selected' : ''; ?>><?php echo $s['source_name']; ?></option>
+                            <?php endwhile; ?>
+                        <?php endif; ?>
                     </select>
                 </div>
                 <div class="form-group">
@@ -112,11 +119,15 @@ include 'includes/header.php';
                     <select name="project_id" class="form-control">
                         <option value="">-- Select Category --</option>
                         <?php 
-                        mysqli_data_seek($projects_result, 0);
-                        while ($p = mysqli_fetch_assoc($projects_result)): 
+                        if ($projects_result):
+                            mysqli_data_seek($projects_result, 0);
+                            while ($p = mysqli_fetch_assoc($projects_result)): 
                         ?>
                             <option value="<?php echo $p['id']; ?>" <?php echo $lead['project_id'] == $p['id'] ? 'selected' : ''; ?>><?php echo $p['name']; ?></option>
-                        <?php endwhile; ?>
+                        <?php 
+                            endwhile; 
+                        endif;
+                        ?>
                     </select>
                 </div>
                 <?php if (isAdmin()): ?>
@@ -124,9 +135,11 @@ include 'includes/header.php';
                     <label class="form-label">Assign To Executive</label>
                     <select name="assigned_to" class="form-control">
                         <option value="">-- Select Executive --</option>
-                        <?php while ($u = mysqli_fetch_assoc($users_result)): ?>
-                            <option value="<?php echo $u['id']; ?>" <?php echo $lead['assigned_to'] == $u['id'] ? 'selected' : ''; ?>><?php echo $u['name']; ?></option>
-                        <?php endwhile; ?>
+                        <?php if ($users_result): ?>
+                            <?php while ($u = mysqli_fetch_assoc($users_result)): ?>
+                                <option value="<?php echo $u['id']; ?>" <?php echo $lead['assigned_to'] == $u['id'] ? 'selected' : ''; ?>><?php echo $u['name']; ?></option>
+                            <?php endwhile; ?>
+                        <?php endif; ?>
                     </select>
                 </div>
                 <?php else: ?>
