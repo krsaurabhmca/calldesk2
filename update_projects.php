@@ -1,7 +1,6 @@
 <?php
 require_once 'config/db.php';
 
-// 1. Create projects table with organization_id
 $res1 = mysqli_query($conn, "CREATE TABLE IF NOT EXISTS projects (
     id INT AUTO_INCREMENT PRIMARY KEY,
     organization_id INT NOT NULL,
@@ -9,6 +8,13 @@ $res1 = mysqli_query($conn, "CREATE TABLE IF NOT EXISTS projects (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     UNIQUE KEY (organization_id, name)
 )");
+
+// Ensure organization_id exists in projects if table was already there
+$checkProj = mysqli_query($conn, "SHOW COLUMNS FROM projects LIKE 'organization_id'");
+if (mysqli_num_rows($checkProj) == 0) {
+    mysqli_query($conn, "ALTER TABLE projects ADD COLUMN organization_id INT NOT NULL AFTER id");
+    mysqli_query($conn, "ALTER TABLE projects ADD UNIQUE KEY (organization_id, name)");
+}
 
 // 2. Create user_projects mapping table
 $res2 = mysqli_query($conn, "CREATE TABLE IF NOT EXISTS user_projects (
