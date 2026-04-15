@@ -180,7 +180,7 @@ include 'includes/header.php';
         <thead>
             <tr>
                 <th>Lead / Contact</th>
-                <th>Type</th>
+                <th>Type / SIM</th>
                 <th>Duration</th>
                 <?php if ($role === 'admin'): ?><th>Executive</th><?php endif; ?>
                 <th>Call Time</th>
@@ -219,6 +219,13 @@ include 'includes/header.php';
                         <i class="fas fa-phone-<?= $row['type']==='Missed'?'slash':($row['type']==='Incoming'?'volume-down':'volume') ?>" style="font-size:.6rem;"></i>
                         <?= $row['type'] ?>
                     </span>
+                    <?php if ($row['sim_slot'] !== '' && $row['sim_slot'] !== null): 
+                        $sim_label = ($row['sim_slot'] == '0') ? 'SIM 1' : (($row['sim_slot'] == '1') ? 'SIM 2' : 'SIM '.$row['sim_slot']);
+                    ?>
+                        <div style="font-size: 0.6rem; font-weight: 800; color: #94a3b8; margin-top: 3px; display: flex; align-items: center; gap: 2px;">
+                            <i class="fas fa-sim-card" style="font-size: 0.55rem;"></i> <?= $sim_label ?>
+                        </div>
+                    <?php endif; ?>
                 </td>
 
                 <td>

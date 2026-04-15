@@ -62,6 +62,12 @@ export const fetchAndSyncCallLogs = async () => {
                 name: log.name || '',
                 type: log.type === 'INCOMING' ? 'Incoming' : (log.type === 'OUTGOING' ? 'Outgoing' : 'Missed'),
                 duration: parseInt(log.duration || '0'),
+                sim_slot: (() => {
+                    const sid = log.sim_id || log.subscription_id;
+                    if (sid === undefined || sid === null) return '';
+                    // Usually 0 is SIM 1, 1 is SIM 2, or it's a longer ID. Let's keep it simple.
+                    return sid.toString();
+                })(),
                 call_time: (() => {
                     const timestamp = parseInt(log.timestamp);
                     if (isNaN(timestamp)) return new Date().toISOString().slice(0, 19).replace('T', ' ');

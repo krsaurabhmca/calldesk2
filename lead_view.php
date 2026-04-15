@@ -209,6 +209,13 @@ include 'includes/header.php';
                                 <td>
                                     <div style="font-weight: 700; font-size: 0.8125rem; color: <?php echo $call['type'] == 'Incoming' ? '#10b981' : ($call['type'] == 'Missed' ? '#ef4444' : 'var(--primary)'); ?>;">
                                         <i class="fas <?php echo $call['type'] == 'Incoming' ? 'fa-arrow-down' : 'fa-arrow-up'; ?>"></i> <?php echo strtoupper($call['type']); ?>
+                                        <?php if ($call['sim_slot'] !== '' && $call['sim_slot'] !== null): 
+                                            $sim_label = ($call['sim_slot'] == '0') ? 'SIM 1' : (($call['sim_slot'] == '1') ? 'SIM 2' : 'SIM '.$call['sim_slot']);
+                                        ?>
+                                            <span style="font-size: 0.6rem; color: #94a3b8; margin-left: 4px; border: 1px solid #e2e8f0; padding: 1px 4px; border-radius: 4px;">
+                                                <i class="fas fa-sim-card"></i> <?php echo $sim_label; ?>
+                                            </span>
+                                        <?php endif; ?>
                                     </div>
                                     <div style="font-size: 0.7rem; color: var(--text-muted);"><?php echo date('d M, h:i A', strtotime($call['call_time'])); ?></div>
                                 </td>
