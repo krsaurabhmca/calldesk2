@@ -15,12 +15,14 @@ if ($method === 'GET') {
             sendResponse(true, 'No projects found (invalid org)', []);
         }
 
-        // Fetch projects
+        // Fetch projects with lead count
         if ($role === 'admin') {
-            $sql = "SELECT * FROM projects WHERE organization_id = $org_id_val ORDER BY name ASC";
+            $sql = "SELECT p.*, (SELECT COUNT(*) FROM leads l WHERE l.project_id = p.id) as lead_count 
+                    FROM projects p WHERE p.organization_id = $org_id_val ORDER BY name ASC";
         } else {
             // Non-admins only see projects assigned to them
-            $sql = "SELECT p.* FROM projects p 
+            $sql = "SELECT p.*, (SELECT COUNT(*) FROM leads l WHERE l.project_id = p.id) as lead_count
+                    FROM projects p 
                     JOIN user_projects up ON p.id = up.project_id 
                     WHERE up.user_id = $executive_id AND p.organization_id = $org_id_val 
                     ORDER BY p.name ASC";

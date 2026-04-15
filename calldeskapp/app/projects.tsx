@@ -185,17 +185,25 @@ export default function ProjectManagement() {
                     contentContainerStyle={{ padding: 20 }}
                     refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
                     renderItem={({ item }) => (
-                        <View style={styles.projRow}>
-                            <View style={styles.projInfo}>
-                                <View style={styles.iconCircle}>
-                                    <Briefcase size={18} color="#6366f1" />
-                                </View>
-                                <Text style={styles.projName}>{item.name}</Text>
-                            </View>
-                            <TouchableOpacity onPress={() => handleDeleteProject(item.id, item.name)}>
-                                <Trash2 size={18} color="#ef4444" />
-                            </TouchableOpacity>
-                        </View>
+            <View style={styles.projRow}>
+                <View style={styles.projInfo}>
+                    <View style={[styles.iconCircle, { backgroundColor: item.lead_count > 0 ? '#6366f1' : '#f5f3ff' }]}>
+                        <Briefcase size={18} color={item.lead_count > 0 ? '#fff' : '#6366f1'} />
+                    </View>
+                    <View>
+                        <Text style={styles.projName}>{item.name}</Text>
+                        <Text style={styles.projStats}>
+                            {item.lead_count || 0} {item.lead_count === 1 ? 'Lead' : 'Leads'}
+                        </Text>
+                    </View>
+                </View>
+                <TouchableOpacity 
+                    style={styles.deleteBtn}
+                    onPress={() => handleDeleteProject(item.id, item.name)}
+                >
+                    <Trash2 size={18} color="#ef4444" />
+                </TouchableOpacity>
+            </View>
                     )}
                     ListEmptyComponent={<Text style={styles.empty}>No projects added yet</Text>}
                 />
@@ -236,11 +244,25 @@ export default function ProjectManagement() {
                         </View>
                         <TextInput
                             style={styles.input}
-                            placeholder="Category Name (e.g., Luxury Villas, Commercial)"
+                            placeholder="Category Name (e.g., Luxury Villas)"
                             value={newName}
                             onChangeText={setNewName}
                             autoFocus
                         />
+                        
+                        <Text style={styles.suggestLabel}>Quick Suggestions:</Text>
+                        <View style={styles.suggestions}>
+                            {['Property', 'Loan', 'Insurance', 'Credit Card', 'Investment'].map(s => (
+                                <TouchableOpacity 
+                                    key={s} 
+                                    style={styles.suggestItem}
+                                    onPress={() => setNewName(s)}
+                                >
+                                    <Text style={styles.suggestText}>{s}</Text>
+                                </TouchableOpacity>
+                            ))}
+                        </View>
+
                         <TouchableOpacity style={styles.saveBtn} onPress={handleAddProject} disabled={saving}>
                             {saving ? <ActivityIndicator color="#fff" /> : <Text style={styles.saveText}>Create Category</Text>}
                         </TouchableOpacity>
@@ -297,31 +319,37 @@ const styles = StyleSheet.create({
     tabActive: { borderBottomColor: '#6366f1' },
     tabText: { fontSize: 14, fontWeight: '600', color: '#94a3b8' },
     tabTextActive: { color: '#6366f1' },
-    projRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#fff', padding: 16, borderRadius: 20, marginBottom: 10, borderWidth: 1, borderColor: '#f1f5f9' },
-    projInfo: { flexDirection: 'row', alignItems: 'center', gap: 14 },
-    iconCircle: { width: 36, height: 36, borderRadius: 10, backgroundColor: '#f5f3ff', justifyContent: 'center', alignItems: 'center' },
-    projName: { fontSize: 16, fontWeight: '700', color: '#334155' },
-    userRow: { backgroundColor: '#fff', padding: 16, borderRadius: 20, marginBottom: 10, borderWidth: 1, borderColor: '#f1f5f9' },
+    projRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#fff', padding: 18, borderRadius: 24, marginBottom: 12, elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8 },
+    projInfo: { flexDirection: 'row', alignItems: 'center', gap: 16 },
+    iconCircle: { width: 44, height: 44, borderRadius: 14, justifyContent: 'center', alignItems: 'center' },
+    projName: { fontSize: 17, fontWeight: '800', color: '#1e293b' },
+    projStats: { fontSize: 12, color: '#94a3b8', marginTop: 2, fontWeight: '600' },
+    deleteBtn: { padding: 8, borderRadius: 12, backgroundColor: '#fff1f2' },
+    userRow: { backgroundColor: '#fff', padding: 18, borderRadius: 24, marginBottom: 12, borderLeftWidth: 4, borderLeftColor: '#6366f1' },
     userInfo: { flexDirection: 'row', alignItems: 'center', gap: 14 },
-    userAvatar: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#e0f2fe', justifyContent: 'center', alignItems: 'center' },
-    avatarTxt: { color: '#0ea5e9', fontWeight: '800', fontSize: 18 },
-    userName: { fontSize: 16, fontWeight: '800', color: '#1e293b' },
-    userDeps: { fontSize: 12, color: '#64748b', marginTop: 2 },
+    userAvatar: { width: 48, height: 48, borderRadius: 16, backgroundColor: '#f0f9ff', justifyContent: 'center', alignItems: 'center' },
+    avatarTxt: { color: '#0ea5e9', fontWeight: '900', fontSize: 20 },
+    userName: { fontSize: 17, fontWeight: '800', color: '#1e293b' },
+    userDeps: { fontSize: 12, color: '#64748b', marginTop: 2, fontWeight: '500' },
     empty: { textAlign: 'center', color: '#94a3b8', marginTop: 40, fontSize: 14 },
-    modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'flex-end' },
-    modalContent: { backgroundColor: '#fff', borderTopLeftRadius: 32, borderTopRightRadius: 32, padding: 24, elevation: 20 },
+    modalOverlay: { flex: 1, backgroundColor: 'rgba(15, 23, 42, 0.7)', justifyContent: 'flex-end' },
+    modalContent: { backgroundColor: '#fff', borderTopLeftRadius: 36, borderTopRightRadius: 36, padding: 24, paddingBottom: 40 },
     modalHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 24 },
-    modalTitle: { fontSize: 20, fontWeight: '800', color: '#1e293b' },
+    modalTitle: { fontSize: 22, fontWeight: '900', color: '#0f172a' },
     modalSubtitle: { fontSize: 13, color: '#64748b', marginTop: 2 },
-    input: { backgroundColor: '#f8fafc', height: 56, borderRadius: 16, paddingHorizontal: 16, fontSize: 16, borderWidth: 1, borderColor: '#e2e8f0', marginBottom: 24 },
-    saveBtn: { backgroundColor: '#6366f1', height: 56, borderRadius: 16, justifyContent: 'center', alignItems: 'center', elevation: 4 },
-    saveText: { color: '#fff', fontSize: 16, fontWeight: '800' },
-    selectRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 16, borderRadius: 16, marginBottom: 8, backgroundColor: '#f8fafc', borderWidth: 1, borderColor: '#f1f5f9' },
-    selectRowActive: { backgroundColor: '#f5f3ff', borderColor: '#c7d2fe' },
-    selectText: { fontSize: 15, fontWeight: '600', color: '#475569' },
-    selectTextActive: { color: '#6366f1', fontWeight: '700' },
-    errorTitle: { fontSize: 18, fontWeight: '800', color: '#1e293b', marginBottom: 8 },
-    errorSub: { fontSize: 14, color: '#64748b', textAlign: 'center', marginBottom: 24 },
-    retryBtn: { flexDirection: 'row', backgroundColor: '#6366f1', paddingHorizontal: 24, paddingVertical: 14, borderRadius: 16, alignItems: 'center' },
+    input: { backgroundColor: '#f8fafc', height: 60, borderRadius: 20, paddingHorizontal: 20, fontSize: 16, borderWidth: 1, borderColor: '#e2e8f0', marginBottom: 20 },
+    suggestLabel: { fontSize: 12, fontWeight: '700', color: '#94a3b8', marginBottom: 12, textTransform: 'uppercase' },
+    suggestions: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 30 },
+    suggestItem: { backgroundColor: '#f1f5f9', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 10 },
+    suggestText: { fontSize: 13, color: '#475569', fontWeight: '600' },
+    saveBtn: { backgroundColor: '#6366f1', height: 60, borderRadius: 20, justifyContent: 'center', alignItems: 'center', elevation: 8, shadowColor: '#6366f1', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 12 },
+    saveText: { color: '#fff', fontSize: 18, fontWeight: '800' },
+    selectRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 18, borderRadius: 20, marginBottom: 10, backgroundColor: '#f8fafc', borderWidth: 1, borderColor: '#f1f5f9' },
+    selectRowActive: { backgroundColor: '#f5f3ff', borderColor: '#c7d2fe', borderWidth: 2 },
+    selectText: { fontSize: 16, fontWeight: '600', color: '#475569' },
+    selectTextActive: { color: '#6366f1', fontWeight: '800' },
+    errorTitle: { fontSize: 20, fontWeight: '900', color: '#0f172a', marginBottom: 8 },
+    errorSub: { fontSize: 14, color: '#64748b', textAlign: 'center', marginBottom: 30 },
+    retryBtn: { flexDirection: 'row', backgroundColor: '#6366f1', paddingHorizontal: 30, paddingVertical: 16, borderRadius: 20, alignItems: 'center' },
     retryText: { color: '#fff', fontSize: 16, fontWeight: '800' }
 });
