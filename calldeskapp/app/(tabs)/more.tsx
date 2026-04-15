@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { UserCog, MessageSquare, ChevronRight, User, Phone, LogOut, Info, Settings, BarChart3, Flag } from 'lucide-react-native';
+import { UserCog, MessageSquare, ChevronRight, User, Phone, LogOut, Info, Settings, BarChart3, Flag, Layers, Share2 } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { getUser, logout } from '../../services/auth';
 
@@ -113,7 +113,7 @@ export default function MoreScreen() {
                     adminOnly={true}
                 />
                 <MenuButton
-                    icon={Settings}
+                    icon={Layers}
                     title="Project Categories"
                     subtitle="Manage categories and permissions"
                     onPress={() => router.push('/projects')}
@@ -121,11 +121,11 @@ export default function MoreScreen() {
                     adminOnly={true}
                 />
                 <MenuButton
-                    icon={Settings}
-                    title="System Settings"
-                    subtitle="App configurations and preferences"
-                    onPress={() => Alert.alert('Coming Soon', 'Settings will be available in the next update.')}
-                    color="#64748b"
+                    icon={Share2}
+                    title="Lead Sources"
+                    subtitle="Manage intake channels & tracking"
+                    onPress={() => router.push('/sources')}
+                    color="#84cc16"
                     adminOnly={true}
                 />
             </View>

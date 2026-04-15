@@ -1,27 +1,28 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Modal, TextInput, ActivityIndicator, Alert, RefreshControl } from 'react-native';
-import { Plus, Trash2, Search, X, Flag, AlertCircle, RefreshCcw, ShieldCheck } from 'lucide-react-native';
+import { Plus, Trash2, X, Share2, AlertCircle, RefreshCcw, ShieldCheck } from 'lucide-react-native';
 import { apiCall } from '../services/api';
 import { getUser } from '../services/auth';
 import { useRouter } from 'expo-router';
 import { useSnackbar } from '../context/SnackbarContext';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
-export default function SourceManagement() {
+export default function LeadSourceManagement() {
     const { showSnackbar } = useSnackbar();
     const router = useRouter();
+    
     const [sources, setSources] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
+    const [userRole, setUserRole] = useState<string | null>(null);
+
+    // Add Source State
     const [showAddModal, setShowAddModal] = useState(false);
     const [newName, setNewName] = useState('');
     const [saving, setSaving] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-    const [userRole, setUserRole] = useState<string | null>(null);
 
-    const fetchSources = async () => {
+    const fetchData = async () => {
         if (!refreshing) setLoading(true);
-        setError(null);
-
         const userData = await getUser();
         setUserRole(userData?.role || 'executive');
 
@@ -35,50 +36,53 @@ export default function SourceManagement() {
         if (res.success) {
             setSources(res.data);
         } else {
-            setError(res.message);
+            showSnackbar(res.message, 'error');
         }
+        
         setLoading(false);
         setRefreshing(false);
     };
 
     useEffect(() => {
-        fetchSources();
+        fetchData();
     }, []);
 
     const onRefresh = React.useCallback(() => {
         setRefreshing(true);
-        fetchSources();
+        fetchData();
     }, []);
 
-    const handleAdd = async () => {
-        if (!newName) return;
+    const handleAddSource = async () => {
+        if (!newName.trim()) return;
         setSaving(true);
         const res = await apiCall('sources.php', 'POST', {
             action: 'add',
-            source_name: newName
+            source_name: newName.trim()
         });
         if (res.success) {
-            showSnackbar('Source added', 'success');
+            showSnackbar('Lead source added', 'success');
             setNewName('');
             setShowAddModal(false);
-            fetchSources();
+            fetchData();
         } else {
             showSnackbar(res.message, 'error');
         }
         setSaving(false);
     };
 
-    const handleDelete = (id: number, name: string) => {
-        Alert.alert('Delete Source', `Delete "${name}"? This might affect leads using this source.`, [
+    const handleDeleteSource = (id: number, name: string) => {
+        Alert.alert('Delete Source', `Are you sure you want to remove "${name}"? This won't delete existing leads but will hide it from the dropdown.`, [
             { text: 'Cancel', style: 'cancel' },
             {
                 text: 'Delete',
                 style: 'destructive',
                 onPress: async () => {
-                    const res = await apiCall('sources.php', 'POST', { action: 'delete', id });
+                    const res = await apiCall(`sources.php?id=${id}`, 'DELETE');
                     if (res.success) {
                         showSnackbar('Source deleted', 'success');
-                        fetchSources();
+                        fetchData();
+                    } else {
+                        showSnackbar(res.message, 'error');
                     }
                 }
             }
@@ -98,7 +102,7 @@ export default function SourceManagement() {
             <View style={styles.center}>
                 <ShieldCheck size={64} color="#ef4444" style={{ marginBottom: 20 }} />
                 <Text style={styles.errorTitle}>Access Denied</Text>
-                <Text style={styles.errorSub}>This section is restricted to administrators only.</Text>
+                <Text style={styles.errorSub}>Only administrators can manage lead sources.</Text>
                 <TouchableOpacity style={styles.retryBtn} onPress={() => router.back()}>
                     <Text style={styles.retryText}>Go Back</Text>
                 </TouchableOpacity>
@@ -106,24 +110,13 @@ export default function SourceManagement() {
         );
     }
 
-    if (error && !refreshing && sources.length === 0) {
-        return (
-            <View style={styles.center}>
-                <AlertCircle size={48} color="#ef4444" style={{ marginBottom: 16 }} />
-                <Text style={styles.errorTitle}>Database Issue</Text>
-                <Text style={styles.errorSub}>{error}</Text>
-                <TouchableOpacity style={styles.retryBtn} onPress={fetchSources}>
-                    <RefreshCcw size={18} color="#fff" style={{ marginRight: 8 }} />
-                    <Text style={styles.retryText}>Try Again</Text>
-                </TouchableOpacity>
-            </View>
-        );
-    }
-
     return (
-        <View style={styles.container}>
+        <SafeAreaView style={styles.container}>
             <View style={styles.header}>
-                <Text style={styles.title}>Lead Sources</Text>
+                <View>
+                    <Text style={styles.title}>Lead Sources</Text>
+                    <Text style={styles.subtitle}>Manage intake channels</Text>
+                </View>
                 <TouchableOpacity style={styles.addBtn} onPress={() => setShowAddModal(true)}>
                     <Plus color="#fff" size={20} />
                 </TouchableOpacity>
@@ -134,19 +127,30 @@ export default function SourceManagement() {
                 contentContainerStyle={{ padding: 20 }}
                 refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
                 renderItem={({ item }) => (
-                    <View style={styles.row}>
-                        <View style={styles.info}>
-                            <Flag size={18} color="#94a3b8" />
-                            <Text style={styles.name}>{item.source_name}</Text>
+                    <View style={styles.sourceRow}>
+                        <View style={styles.sourceInfo}>
+                            <View style={styles.iconCircle}>
+                                <Share2 size={18} color="#6366f1" />
+                            </View>
+                            <Text style={styles.sourceName}>{item.source_name}</Text>
                         </View>
-                        <TouchableOpacity onPress={() => handleDelete(item.id, item.source_name)}>
+                        <TouchableOpacity 
+                            style={styles.deleteBtn}
+                            onPress={() => handleDeleteSource(item.id, item.source_name)}
+                        >
                             <Trash2 size={18} color="#ef4444" />
                         </TouchableOpacity>
                     </View>
                 )}
-                ListEmptyComponent={<Text style={styles.empty}>No sources added yet</Text>}
+                ListEmptyComponent={
+                    <View style={styles.emptyContainer}>
+                        <AlertCircle size={40} color="#cbd5e1" style={{ marginBottom: 16 }} />
+                        <Text style={styles.empty}>No sources added yet</Text>
+                    </View>
+                }
             />
 
+            {/* Add Source Modal */}
             <Modal visible={showAddModal} transparent animationType="slide">
                 <View style={styles.modalOverlay}>
                     <View style={styles.modalContent}>
@@ -158,40 +162,62 @@ export default function SourceManagement() {
                         </View>
                         <TextInput
                             style={styles.input}
-                            placeholder="Source Name (e.g., Instagram, Radio)"
+                            placeholder="Source Name (e.g., Facebook Ads)"
                             value={newName}
                             onChangeText={setNewName}
                             autoFocus
                         />
-                        <TouchableOpacity style={styles.saveBtn} onPress={handleAdd} disabled={saving}>
+                        
+                        <Text style={styles.suggestLabel}>Core Presets:</Text>
+                        <View style={styles.suggestions}>
+                            {['Facebook', 'Google', 'WhatsApp', 'Referral', 'Website', 'Instagram', 'Direct'].map(s => (
+                                <TouchableOpacity 
+                                    key={s} 
+                                    style={styles.suggestItem}
+                                    onPress={() => setNewName(s)}
+                                >
+                                    <Text style={styles.suggestText}>{s}</Text>
+                                </TouchableOpacity>
+                            ))}
+                        </View>
+
+                        <TouchableOpacity style={styles.saveBtn} onPress={handleAddSource} disabled={saving}>
                             {saving ? <ActivityIndicator color="#fff" /> : <Text style={styles.saveText}>Add Source</Text>}
                         </TouchableOpacity>
                     </View>
                 </View>
             </Modal>
-        </View>
+        </SafeAreaView>
     );
 }
 
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#f8fafc' },
     center: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24 },
-    header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 20, backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
-    title: { fontSize: 20, fontWeight: '800', color: '#1e293b' },
-    addBtn: { width: 40, height: 40, borderRadius: 12, backgroundColor: '#6366f1', justifyContent: 'center', alignItems: 'center' },
-    row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#fff', padding: 16, borderRadius: 16, marginBottom: 8, borderWidth: 1, borderColor: '#f1f5f9' },
-    info: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-    name: { fontSize: 16, fontWeight: '700', color: '#334155' },
-    empty: { textAlign: 'center', color: '#94a3b8', marginTop: 40 },
-    modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
-    modalContent: { backgroundColor: '#fff', borderTopLeftRadius: 30, borderTopRightRadius: 30, padding: 24 },
-    modalHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 20 },
-    modalTitle: { fontSize: 18, fontWeight: '800', color: '#1e293b' },
-    input: { backgroundColor: '#f8fafc', height: 50, borderRadius: 12, paddingHorizontal: 16, fontSize: 16, borderWidth: 1, borderColor: '#e2e8f0', marginBottom: 20 },
-    saveBtn: { backgroundColor: '#6366f1', height: 50, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
-    saveText: { color: '#fff', fontSize: 16, fontWeight: '700' },
-    errorTitle: { fontSize: 18, fontWeight: '800', color: '#1e293b', marginBottom: 8 },
-    errorSub: { fontSize: 14, color: '#64748b', textAlign: 'center', marginBottom: 24 },
-    retryBtn: { flexDirection: 'row', backgroundColor: '#6366f1', paddingHorizontal: 20, paddingVertical: 12, borderRadius: 12, alignItems: 'center' },
-    retryText: { color: '#fff', fontSize: 16, fontWeight: '700' }
+    header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingTop: 20, paddingBottom: 16, backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
+    title: { fontSize: 22, fontWeight: '800', color: '#1e293b' },
+    subtitle: { fontSize: 13, color: '#64748b', marginTop: 2 },
+    addBtn: { width: 44, height: 44, borderRadius: 14, backgroundColor: '#6366f1', justifyContent: 'center', alignItems: 'center', elevation: 2 },
+    sourceRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#fff', padding: 18, borderRadius: 20, marginBottom: 12, elevation: 1, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, borderWidth: 1, borderColor: '#f1f5f9' },
+    sourceInfo: { flexDirection: 'row', alignItems: 'center', gap: 16 },
+    iconCircle: { width: 40, height: 40, borderRadius: 12, backgroundColor: '#f5f3ff', justifyContent: 'center', alignItems: 'center' },
+    sourceName: { fontSize: 16, fontWeight: '700', color: '#1e293b' },
+    deleteBtn: { padding: 10, borderRadius: 12, backgroundColor: '#fff1f2' },
+    emptyContainer: { alignItems: 'center', marginTop: 60 },
+    empty: { color: '#94a3b8', fontSize: 15, fontWeight: '500' },
+    modalOverlay: { flex: 1, backgroundColor: 'rgba(15, 23, 42, 0.7)', justifyContent: 'flex-end' },
+    modalContent: { backgroundColor: '#fff', borderTopLeftRadius: 32, borderTopRightRadius: 32, padding: 24, paddingBottom: 40 },
+    modalHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 24 },
+    modalTitle: { fontSize: 22, fontWeight: '900', color: '#0f172a' },
+    input: { backgroundColor: '#f8fafc', height: 60, borderRadius: 20, paddingHorizontal: 20, fontSize: 16, borderWidth: 1, borderColor: '#e2e8f0', marginBottom: 20 },
+    suggestLabel: { fontSize: 12, fontWeight: '700', color: '#94a3b8', marginBottom: 12, textTransform: 'uppercase' },
+    suggestions: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 30 },
+    suggestItem: { backgroundColor: '#f1f5f9', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 10 },
+    suggestText: { fontSize: 13, color: '#475569', fontWeight: '600' },
+    saveBtn: { backgroundColor: '#6366f1', height: 60, borderRadius: 20, justifyContent: 'center', alignItems: 'center', elevation: 8, shadowColor: '#6366f1', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 12 },
+    saveText: { color: '#fff', fontSize: 18, fontWeight: '800' },
+    errorTitle: { fontSize: 20, fontWeight: '900', color: '#0f172a', marginBottom: 8 },
+    errorSub: { fontSize: 14, color: '#64748b', textAlign: 'center', marginBottom: 30 },
+    retryBtn: { flexDirection: 'row', backgroundColor: '#6366f1', paddingHorizontal: 30, paddingVertical: 16, borderRadius: 20, alignItems: 'center' },
+    retryText: { color: '#fff', fontSize: 16, fontWeight: '800' }
 });
