@@ -28,6 +28,19 @@ if (isset($_POST['action'])) {
         mysqli_query($conn, "UPDATE whatsapp_messages SET is_default = 0 WHERE executive_id = $executive_id AND organization_id = $org_id");
         mysqli_query($conn, "UPDATE whatsapp_messages SET is_default = 1 WHERE id = $id AND executive_id = $executive_id AND organization_id = $org_id");
         echo "<script>window.location.href='messages.php';</script>";
+    } elseif ($_POST['action'] === 'update') {
+        $id = (int)$_POST['id'];
+        $title = mysqli_real_escape_string($conn, $_POST['title']);
+        $message = mysqli_real_escape_string($conn, $_POST['message']);
+        $is_default = isset($_POST['is_default']) ? 1 : 0;
+
+        if ($is_default) {
+            mysqli_query($conn, "UPDATE whatsapp_messages SET is_default = 0 WHERE executive_id = $executive_id AND organization_id = $org_id");
+        }
+
+        $sql = "UPDATE whatsapp_messages SET title = '$title', message = '$message', is_default = $is_default WHERE id = $id AND executive_id = $executive_id AND organization_id = $org_id";
+        mysqli_query($conn, $sql);
+        echo "<script>window.location.href='messages.php';</script>";
     }
 }
 
@@ -65,6 +78,9 @@ $result = mysqli_query($conn, $sql);
                             </button>
                         </form>
                     <?php endif; ?>
+                    <button type="button" class="action-btn" title="Edit Template" onclick='openEditModal(<?php echo json_encode($row); ?>)'>
+                        <i class="far fa-edit"></i>
+                    </button>
                     <form method="POST" style="display: inline;" onsubmit="return confirm('Are you sure?')">
                         <input type="hidden" name="action" value="delete">
                         <input type="hidden" name="id" value="<?php echo $row['id']; ?>">
@@ -121,7 +137,47 @@ $result = mysqli_query($conn, $sql);
             </div>
         </form>
     </div>
+<!-- Edit Modal -->
+<div id="editModal" class="modal-overlay" style="display: none;">
+    <div class="modal-card">
+        <div class="modal-header">
+            <h3>Edit Message Template</h3>
+            <button class="close-btn" onclick="document.getElementById('editModal').style.display='none'">&times;</button>
+        </div>
+        <form method="POST">
+            <input type="hidden" name="action" value="update">
+            <input type="hidden" name="id" id="edit_id">
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Template Title</label>
+                    <input type="text" name="title" id="edit_title" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Message Content</label>
+                    <textarea name="message" id="edit_message" class="form-control" rows="5" required></textarea>
+                </div>
+                <div class="form-group" style="display: flex; align-items: center; gap: 0.5rem;">
+                    <input type="checkbox" name="is_default" id="edit_is_default">
+                    <label for="edit_is_default" style="font-size: 0.875rem; font-weight: 500; color: var(--text-main);">Set as Default Template</label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn" style="background: #f1f5f9; color: var(--text-main);" onclick="document.getElementById('editModal').style.display='none'">Cancel</button>
+                <button type="submit" class="btn btn-primary">Update Template</button>
+            </div>
+        </form>
+    </div>
 </div>
+
+<script>
+function openEditModal(data) {
+    document.getElementById('edit_id').value = data.id;
+    document.getElementById('edit_title').value = data.title;
+    document.getElementById('edit_message').value = data.message;
+    document.getElementById('edit_is_default').checked = data.is_default == 1;
+    document.getElementById('editModal').style.display = 'flex';
+}
+</script>
 
 <style>
 .page-header {
