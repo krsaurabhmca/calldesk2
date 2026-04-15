@@ -9,6 +9,7 @@ $role = $_SESSION['role'];
 
 $search = isset($_GET['search']) ? mysqli_real_escape_string($conn, $_GET['search']) : '';
 $status_filter = isset($_GET['status']) ? mysqli_real_escape_string($conn, $_GET['status']) : '';
+$project_filter = isset($_GET['project_id']) ? (int)$_GET['project_id'] : 0;
 
 $org_id = getOrgId();
 $where = "WHERE l.organization_id = $org_id";
@@ -21,13 +22,19 @@ if ($search) {
 if ($status_filter) {
     $where .= " AND l.status = '$status_filter'";
 }
+if ($project_filter > 0) {
+    $where .= " AND l.project_id = $project_filter";
+}
 
-$sql = "SELECT l.*, u.name as executive_name, s.source_name 
+$sql = "SELECT l.*, u.name as executive_name, s.source_name, p.name as project_name 
         FROM leads l 
         LEFT JOIN users u ON l.assigned_to = u.id 
         LEFT JOIN lead_sources s ON l.source_id = s.id
+        LEFT JOIN projects p ON l.project_id = p.id
         $where ORDER BY l.id DESC";
 $result = mysqli_query($conn, $sql);
+
+$projects_list = mysqli_query($conn, "SELECT id, name FROM projects WHERE organization_id = $org_id ORDER BY name ASC");
 
 include 'includes/header.php';
 ?>
@@ -57,8 +64,16 @@ include 'includes/header.php';
                 <option value="Lost" <?php echo $status_filter == 'Lost' ? 'selected' : ''; ?>>Lost</option>
             </select>
         </div>
+        <div style="width: 150px;">
+            <select name="project_id" class="form-control" style="background: #fafbfc;">
+                <option value="">All Categories</option>
+                <?php while ($pr = mysqli_fetch_assoc($projects_list)): ?>
+                    <option value="<?php echo $pr['id']; ?>" <?php echo $project_filter == $pr['id'] ? 'selected' : ''; ?>><?php echo $pr['name']; ?></option>
+                <?php endwhile; ?>
+            </select>
+        </div>
         <button type="submit" class="btn btn-primary" style="padding: 0 1.25rem;">Filter</button>
-        <?php if ($search || $status_filter): ?>
+        <?php if ($search || $status_filter || $project_filter): ?>
             <a href="leads.php" class="btn" style="background: var(--border); color: var(--text-main); text-decoration: none;">Clear</a>
         <?php endif; ?>
     </form>
@@ -70,6 +85,7 @@ include 'includes/header.php';
             <thead style="background: #fafafa; border-bottom: 2px solid var(--border);">
                 <tr>
                     <th style="padding: 0.75rem 1.25rem;">Lead Details</th>
+                    <th style="padding: 0.75rem 1.25rem;">Project</th>
                     <th style="padding: 0.75rem 1.25rem;">Source</th>
                     <th style="padding: 0.75rem 1.25rem;">Status</th>
                     <th style="padding: 0.75rem 1.25rem;">Assigned To</th>
@@ -83,6 +99,9 @@ include 'includes/header.php';
                     <td style="padding: 0.75rem 1.25rem;">
                         <div style="font-weight: 700; color: var(--text-main);"><?php echo $row['name']; ?></div>
                         <div style="color: var(--primary); font-size: 0.75rem; font-weight: 600;"><i class="fas fa-phone-alt" style="font-size: 0.625rem;"></i> <?php echo $row['mobile']; ?></div>
+                    </td>
+                    <td style="padding: 0.75rem 1.25rem;">
+                        <span style="font-weight: 600; color: var(--secondary);"><?php echo $row['project_name'] ?: 'N/A'; ?></span>
                     </td>
                     <td style="padding: 0.75rem 1.25rem;">
                         <div style="background: #f1f5f9; padding: 0.125rem 0.5rem; border-radius: 4px; display: inline-block; font-size: 0.625rem; color: var(--text-muted);"><?php echo $row['source_name'] ?: 'Direct'; ?></div>
