@@ -112,8 +112,6 @@ export default function MoreScreen() {
                     color="#f59e0b"
                     adminOnly={true}
                 />
-                    adminOnly={true}
-                />
                 <MenuButton
                     icon={Settings}
                     title="Project Categories"
@@ -148,6 +146,7 @@ export default function MoreScreen() {
                     onPress={() => { }}
                     color="#94a3b8"
                 />
+            </View>
                 <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
                     <LogOut size={20} color="#ef4444" />
                     <Text style={styles.logoutText}>Logout Session</Text>
