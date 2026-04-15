@@ -507,7 +507,7 @@ export default function LeadsScreen() {
                                 onChangeText={setNewProject}
                             />
 
-                            <Text style={styles.label}>Lead Category / Project *</Text>
+                            <Text style={styles.label}>Lead Category / Project (Optional)</Text>
                             <View style={styles.pickerContainer}>
                                 {projects.length > 0 ? (
                                     projects.map((p: any) => (
