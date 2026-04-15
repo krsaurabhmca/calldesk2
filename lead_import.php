@@ -130,6 +130,13 @@ include 'includes/header.php';
                 <i class="fas fa-upload"></i> Choose File & Continue
             </label>
             <input type="hidden" name="upload_csv" value="1">
+            
+            <div style="margin-top: 1.5rem; border-top: 1px solid #f1f5f9; pt: 1rem; padding-top: 1.5rem;">
+                <a href="download_sample.php" style="color: var(--primary); font-size: 0.8125rem; font-weight: 700; text-decoration: none;">
+                    <i class="fas fa-download"></i> Download Sample CSV File
+                </a>
+                <p style="font-size: 0.7rem; color: var(--text-muted); margin-top: 0.4rem;">Includes your current custom fields for easy mapping.</p>
+            </div>
         </form>
     </div>
     <?php else: ?>
