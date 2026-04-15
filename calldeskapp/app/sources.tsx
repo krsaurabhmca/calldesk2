@@ -77,7 +77,10 @@ export default function LeadSourceManagement() {
                 text: 'Delete',
                 style: 'destructive',
                 onPress: async () => {
-                    const res = await apiCall(`sources.php?id=${id}`, 'DELETE');
+                    const res = await apiCall('sources.php', 'POST', {
+                        action: 'delete',
+                        id: id
+                    });
                     if (res.success) {
                         showSnackbar('Source deleted', 'success');
                         fetchData();
