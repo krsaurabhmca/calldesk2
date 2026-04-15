@@ -92,7 +92,7 @@ include 'includes/header.php';
                 <label class="form-label" style="font-size: 0.75rem;">Field Label (Visible to users)</label>
                 <input type="text" name="field_label" id="field_label" class="form-control" placeholder="e.g. Budget Range" required>
             </div>
-            <div class="form-group">
+            <div class="form-group" style="display: none;">
                 <label class="form-label" style="font-size: 0.75rem;">Internal Name (A-Z, no spaces)</label>
                 <input type="text" name="field_name" id="field_name" class="form-control" placeholder="e.g. budget_range" pattern="[a-zA-Z0-9_]+" required>
             </div>
@@ -123,7 +123,6 @@ include 'includes/header.php';
             <thead>
                 <tr>
                     <th style="padding: 1rem;">Label</th>
-                    <th style="padding: 1rem;">Internal Name</th>
                     <th style="padding: 1rem;">Type</th>
                     <th style="padding: 1rem; text-align: right;">Action</th>
                 </tr>
@@ -137,7 +136,6 @@ include 'includes/header.php';
                             <span style="color: var(--danger);">*</span>
                         <?php endif; ?>
                     </td>
-                    <td style="padding: 1rem; font-family: monospace; font-size: 0.75rem; color: var(--text-muted);"><?php echo $row['field_name']; ?></td>
                     <td style="padding: 1rem; text-transform: uppercase; font-size: 0.7rem; font-weight: 700; color: var(--primary);"><?php echo $row['field_type']; ?></td>
                     <td style="padding: 1rem; text-align: right;">
                         <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
@@ -179,10 +177,7 @@ include 'includes/header.php';
                 <label class="form-label" style="font-size: 0.75rem;">Field Label</label>
                 <input type="text" name="field_label" id="edit_field_label" class="form-control" required>
             </div>
-            <div class="form-group">
-                <label class="form-label" style="font-size: 0.75rem;">Internal Name</label>
-                <input type="text" name="field_name" id="edit_field_name" class="form-control" pattern="[a-zA-Z0-9_]+" required>
-            </div>
+            <input type="hidden" name="field_name" id="edit_field_name">
             <div class="form-group">
                 <label class="form-label" style="font-size: 0.75rem;">Field Type</label>
                 <select name="field_type" class="form-control" id="edit_field_type" onchange="toggleEditOptions()">
