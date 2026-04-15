@@ -57,6 +57,15 @@ if ($method === 'GET') {
         } else {
             sendResponse(false, 'Failed to delete lead source', null, 500);
         }
+    } elseif ($action === 'toggle_status') {
+        $id = (int)($post_data['id'] ?? 0);
+        $status = (int)($post_data['status'] ?? 0);
+        
+        if (mysqli_query($conn, "UPDATE lead_sources SET status = $status WHERE id = $id AND organization_id = $org_id")) {
+            sendResponse(true, 'Source status updated');
+        } else {
+            sendResponse(false, 'Failed to update status', null, 500);
+        }
     } else {
         sendResponse(false, 'Invalid action', null, 400);
     }

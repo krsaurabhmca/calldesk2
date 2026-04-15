@@ -502,7 +502,7 @@ export default function LeadsScreen() {
                             <Text style={styles.label}>Lead Category (Select)</Text>
                             <View style={styles.pickerContainer}>
                                 {projects.length > 0 ? (
-                                    projects.map((p: any) => (
+                                    projects.filter((p: any) => p.status === 1 || p.id === selectedProjectId).map((p: any) => (
                                         <TouchableOpacity
                                             key={p.id}
                                             style={[styles.pickerItem, selectedProjectId === p.id && styles.pickerItemActive]}
@@ -521,7 +521,7 @@ export default function LeadsScreen() {
                             <Text style={styles.label}>Source</Text>
                             <View style={styles.pickerContainer}>
                                 {(() => {
-                                    const sourceList = [...(Array.isArray(sources) ? sources : [])];
+                                    const sourceList = [...(Array.isArray(sources) ? sources : [])].filter((s: any) => s.status === 1 || s.id === newSource);
                                     if (!sourceList.find(s => s.source_name === 'Direct')) {
                                         sourceList.unshift({ id: 'Direct', source_name: 'Direct' });
                                     }

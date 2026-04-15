@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Modal, TextInput, ActivityIndicator, Alert, RefreshControl } from 'react-native';
-import { Plus, Trash2, X, Share2, AlertCircle, RefreshCcw, ShieldCheck } from 'lucide-react-native';
+import { Plus, Trash2, X, Share2, AlertCircle, RefreshCcw, ShieldCheck, RotateCw } from 'lucide-react-native';
 import { apiCall } from '../services/api';
 import { getUser } from '../services/auth';
 import { useRouter } from 'expo-router';
@@ -92,6 +92,21 @@ export default function LeadSourceManagement() {
         ]);
     };
 
+    const handleToggleStatus = async (id: number, currentStatus: number) => {
+        const newStatus = currentStatus === 1 ? 0 : 1;
+        const res = await apiCall('sources.php', 'POST', {
+            action: 'toggle_status',
+            id: id,
+            status: newStatus
+        });
+        if (res.success) {
+            showSnackbar('Status updated', 'success');
+            fetchData();
+        } else {
+            showSnackbar(res.message, 'error');
+        }
+    };
+
     if (loading && !refreshing) {
         return (
             <View style={styles.center}>
@@ -130,19 +145,34 @@ export default function LeadSourceManagement() {
                 contentContainerStyle={{ padding: 20 }}
                 refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
                 renderItem={({ item }) => (
-                    <View style={styles.sourceRow}>
+                    <View style={[styles.sourceRow, item.status === 0 && { opacity: 0.6, backgroundColor: '#fdf2f2' }]}>
                         <View style={styles.sourceInfo}>
-                            <View style={styles.iconCircle}>
-                                <Share2 size={18} color="#6366f1" />
+                            <View style={[styles.iconCircle, { backgroundColor: item.status === 1 ? '#f5f3ff' : '#94a3b8' }]}>
+                                <Share2 size={18} color="#fff" />
                             </View>
-                            <Text style={styles.sourceName}>{item.source_name}</Text>
+                            <View>
+                                <Text style={styles.sourceName}>{item.source_name}</Text>
+                                <View style={[styles.statusTag, { backgroundColor: item.status === 1 ? '#dcfce7' : '#fee2e2' }]}>
+                                    <Text style={[styles.statusTagText, { color: item.status === 1 ? '#15803d' : '#b91c1c' }]}>
+                                        {item.status === 1 ? 'Active' : 'Disabled'}
+                                    </Text>
+                                </View>
+                            </View>
                         </View>
-                        <TouchableOpacity 
-                            style={styles.deleteBtn}
-                            onPress={() => handleDeleteSource(item.id, item.source_name)}
-                        >
-                            <Trash2 size={18} color="#ef4444" />
-                        </TouchableOpacity>
+                        <View style={{ flexDirection: 'row', gap: 8 }}>
+                            <TouchableOpacity 
+                                style={[styles.statusBtn, { backgroundColor: item.status === 1 ? '#fef3c7' : '#dcfce7' }]}
+                                onPress={() => handleToggleStatus(item.id, item.status)}
+                            >
+                                <RotateCw size={16} color={item.status === 1 ? '#d97706' : '#15803d'} />
+                            </TouchableOpacity>
+                            <TouchableOpacity 
+                                style={styles.deleteBtn}
+                                onPress={() => handleDeleteSource(item.id, item.source_name)}
+                            >
+                                <Trash2 size={18} color="#ef4444" />
+                            </TouchableOpacity>
+                        </View>
                     </View>
                 )}
                 ListEmptyComponent={
@@ -205,6 +235,9 @@ const styles = StyleSheet.create({
     sourceInfo: { flexDirection: 'row', alignItems: 'center', gap: 16 },
     iconCircle: { width: 40, height: 40, borderRadius: 12, backgroundColor: '#f5f3ff', justifyContent: 'center', alignItems: 'center' },
     sourceName: { fontSize: 16, fontWeight: '700', color: '#1e293b' },
+    statusTag: { paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6, alignSelf: 'flex-start', marginTop: 2 },
+    statusTagText: { fontSize: 9, fontWeight: '800', textTransform: 'uppercase' },
+    statusBtn: { padding: 10, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
     deleteBtn: { padding: 10, borderRadius: 12, backgroundColor: '#fff1f2' },
     emptyContainer: { alignItems: 'center', marginTop: 60 },
     empty: { color: '#94a3b8', fontSize: 15, fontWeight: '500' },

@@ -130,6 +130,21 @@ export default function ProjectManagement() {
         setSaving(false);
     };
 
+    const handleToggleStatus = async (id: number, currentStatus: number) => {
+        const newStatus = currentStatus === 1 ? 0 : 1;
+        const res = await apiCall('projects.php', 'POST', {
+            action: 'toggle_status',
+            id: id,
+            status: newStatus
+        });
+        if (res.success) {
+            showSnackbar('Status updated', 'success');
+            fetchData();
+        } else {
+            showSnackbar(res.message, 'error');
+        }
+    };
+
     if (loading && !refreshing) {
         return (
             <View style={styles.center}>
@@ -186,24 +201,39 @@ export default function ProjectManagement() {
                     contentContainerStyle={{ padding: 20 }}
                     refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
                     renderItem={({ item }) => (
-            <View style={styles.projRow}>
+            <View style={[styles.projRow, item.status === 0 && { opacity: 0.6 , backgroundColor: '#fdf2f2'}]}>
                 <View style={styles.projInfo}>
-                    <View style={[styles.iconCircle, { backgroundColor: item.lead_count > 0 ? '#6366f1' : '#f5f3ff' }]}>
-                        <Briefcase size={18} color={item.lead_count > 0 ? '#fff' : '#6366f1'} />
+                    <View style={[styles.iconCircle, { backgroundColor: item.status === 1 ? (item.lead_count > 0 ? '#6366f1' : '#f5f3ff') : '#94a3b8' }]}>
+                        <Briefcase size={18} color={item.status === 1 && item.lead_count > 0 ? '#fff' : '#fff'} />
                     </View>
                     <View>
-                        <Text style={styles.projName}>{item.name}</Text>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                            <Text style={styles.projName}>{item.name}</Text>
+                            <View style={[styles.statusTag, { backgroundColor: item.status === 1 ? '#dcfce7' : '#fee2e2' }]}>
+                                <Text style={[styles.statusTagText, { color: item.status === 1 ? '#15803d' : '#b91c1c' }]}>
+                                    {item.status === 1 ? 'Active' : 'Disabled'}
+                                </Text>
+                            </View>
+                        </View>
                         <Text style={styles.projStats}>
                             {item.lead_count || 0} {item.lead_count === 1 ? 'Lead' : 'Leads'}
                         </Text>
                     </View>
                 </View>
-                <TouchableOpacity 
-                    style={styles.deleteBtn}
-                    onPress={() => handleDeleteProject(item.id, item.name)}
-                >
-                    <Trash2 size={18} color="#ef4444" />
-                </TouchableOpacity>
+                <View style={{ flexDirection: 'row', gap: 8 }}>
+                    <TouchableOpacity 
+                        style={[styles.statusBtn, { backgroundColor: item.status === 1 ? '#fef3c7' : '#dcfce7' }]}
+                        onPress={() => handleToggleStatus(item.id, item.status)}
+                    >
+                        <RefreshCcw size={16} color={item.status === 1 ? '#d97706' : '#15803d'} />
+                    </TouchableOpacity>
+                    <TouchableOpacity 
+                        style={styles.deleteBtn}
+                        onPress={() => handleDeleteProject(item.id, item.name)}
+                    >
+                        <Trash2 size={18} color="#ef4444" />
+                    </TouchableOpacity>
+                </View>
             </View>
                     )}
                     ListEmptyComponent={<Text style={styles.empty}>No projects added yet</Text>}
@@ -325,6 +355,9 @@ const styles = StyleSheet.create({
     iconCircle: { width: 44, height: 44, borderRadius: 14, justifyContent: 'center', alignItems: 'center' },
     projName: { fontSize: 17, fontWeight: '800', color: '#1e293b' },
     projStats: { fontSize: 12, color: '#94a3b8', marginTop: 2, fontWeight: '600' },
+    statusTag: { paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 },
+    statusTagText: { fontSize: 9, fontWeight: '800', textTransform: 'uppercase' },
+    statusBtn: { padding: 10, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
     deleteBtn: { padding: 8, borderRadius: 12, backgroundColor: '#fff1f2' },
     userRow: { backgroundColor: '#fff', padding: 18, borderRadius: 24, marginBottom: 12, borderLeftWidth: 4, borderLeftColor: '#6366f1' },
     userInfo: { flexDirection: 'row', alignItems: 'center', gap: 14 },

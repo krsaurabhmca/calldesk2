@@ -39,6 +39,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error = "Error: " . $e->getMessage();
         }
     }
+
+    if (isset($_POST['toggle_status'])) {
+        $id = (int)$_POST['source_id'];
+        $status = (int)$_POST['status'];
+        if (mysqli_query($conn, "UPDATE lead_sources SET status = $status WHERE id = $id AND organization_id = $org_id")) {
+            $message = "Status updated successfully!";
+        } else {
+            $error = "Failed to update status.";
+        }
+    }
 }
 
 $org_id = getOrgId();
@@ -87,6 +97,7 @@ include 'includes/header.php';
                     <tr>
                         <th style="padding: 1rem 1.5rem;">Source Name</th>
                         <th style="padding: 1rem 1.5rem;">Leads Count</th>
+                        <th style="padding: 1rem 1.5rem;">Status</th>
                         <th style="padding: 1rem 1.5rem; text-align: right;">Action</th>
                     </tr>
                 </thead>
@@ -96,17 +107,32 @@ include 'includes/header.php';
                         $count_res = mysqli_query($conn, "SELECT COUNT(*) as count FROM leads WHERE source_id = $sid");
                         $count = mysqli_fetch_assoc($count_res)['count'];
                     ?>
-                    <tr>
+                    <tr style="<?php echo $row['status'] == 0 ? 'opacity: 0.6; background: #fdf2f2;' : ''; ?>">
                         <td style="padding: 1rem 1.5rem; font-weight: 600;"><?php echo $row['source_name']; ?></td>
                         <td style="padding: 1rem 1.5rem; color: var(--text-muted);"><?php echo $count; ?></td>
+                        <td style="padding: 1rem 1.5rem;">
+                            <span style="display: inline-flex; align-items: center; gap: 0.375rem; background: <?php echo $row['status'] == 1 ? '#dcfce7' : '#fee2e2'; ?>; color: <?php echo $row['status'] == 1 ? '#15803d' : '#b91c1c'; ?>; padding: 0.2rem 0.6rem; border-radius: 6px; font-size: 0.6875rem; font-weight: 700;">
+                                <?php echo $row['status'] == 1 ? 'Active' : 'Disabled'; ?>
+                            </span>
+                        </td>
                         <td style="padding: 1rem 1.5rem; text-align: right;">
-                            <form action="" method="POST" onsubmit="return confirm('Are you sure? This will set source to NULL for existing leads.');" style="display: inline;">
-                                <input type="hidden" name="source_id" value="<?php echo $row['id']; ?>">
-                                <input type="hidden" name="delete_source" value="1">
-                                <button type="submit" class="btn" style="background: #fee2e2; color: #b91c1c; padding: 0.5rem; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">
-                                    <i class="fas fa-trash" style="font-size: 0.75rem;"></i>
-                                </button>
-                            </form>
+                            <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+                                <form action="" method="POST" style="display: inline;">
+                                    <input type="hidden" name="source_id" value="<?php echo $row['id']; ?>">
+                                    <input type="hidden" name="status" value="<?php echo $row['status'] == 1 ? '0' : '1'; ?>">
+                                    <input type="hidden" name="toggle_status" value="1">
+                                    <button type="submit" class="btn" style="background: #f1f5f9; color: <?php echo $row['status'] == 1 ? 'var(--warning)' : 'var(--success)'; ?>; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;" title="<?php echo $row['status'] == 1 ? 'Disable' : 'Enable'; ?>">
+                                        <i class="fas <?php echo $row['status'] == 1 ? 'fa-toggle-on' : 'fa-toggle-off'; ?>"></i>
+                                    </button>
+                                </form>
+                                <form action="" method="POST" onsubmit="return confirm('Are you sure? This will set source to NULL for existing leads.');" style="display: inline;">
+                                    <input type="hidden" name="source_id" value="<?php echo $row['id']; ?>">
+                                    <input type="hidden" name="delete_source" value="1">
+                                    <button type="submit" class="btn" style="background: #fee2e2; color: #b91c1c; padding: 0.5rem; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;">
+                                        <i class="fas fa-trash" style="font-size: 0.75rem;"></i>
+                                    </button>
+                                </form>
+                            </div>
                         </td>
                     </tr>
                     <?php endwhile; ?>

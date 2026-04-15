@@ -122,6 +122,18 @@ if ($method === 'GET') {
         }
 
         sendResponse(true, 'Projects assigned successfully');
+    } elseif ($action === 'toggle_status') {
+        if ($role !== 'admin') {
+            sendResponse(false, 'Unauthorized', null, 403);
+        }
+        $id = (int)($post_data['id'] ?? 0);
+        $status = (int)($post_data['status'] ?? 0);
+        
+        if (mysqli_query($conn, "UPDATE projects SET status = $status WHERE id = $id AND organization_id = $org_id")) {
+            sendResponse(true, 'Project status updated');
+        } else {
+            sendResponse(false, 'Failed to update status', null, 500);
+        }
     } else {
         sendResponse(false, 'Invalid action specified: ' . $action, null, 400);
     }
