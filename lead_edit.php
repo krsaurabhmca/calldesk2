@@ -2,6 +2,7 @@
 // lead_edit.php
 require_once 'config/db.php';
 require_once 'includes/auth.php';
+require_once 'includes/custom_fields_helper.php';
 checkAuth();
 
 $lead_id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
@@ -44,6 +45,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     try {
         if (mysqli_query($conn, $sql)) {
+            // Handle Custom Fields Update
+            if (isset($_POST['custom'])) {
+                foreach ($_POST['custom'] as $field_id => $val) {
+                    $field_id = (int)$field_id;
+                    $val = mysqli_real_escape_string($conn, $val);
+                    // Use REPLACE or DELETE/INSERT to update custom data
+                    mysqli_query($conn, "DELETE FROM lead_custom_data WHERE lead_id = $lead_id AND field_id = $field_id");
+                    mysqli_query($conn, "INSERT INTO lead_custom_data (lead_id, field_id, field_value) VALUES ($lead_id, $field_id, '$val')");
+                }
+            }
             header("Location: lead_view.php?id=$lead_id&success=1");
             exit();
         } else {
@@ -62,6 +73,8 @@ if ($org_id) {
     $users_result = mysqli_query($conn, "SELECT id, name FROM users WHERE organization_id = $org_id AND status = 1 ORDER BY name ASC");
     $sources_result = mysqli_query($conn, "SELECT id, source_name FROM lead_sources WHERE organization_id = $org_id AND (status = 1 OR id = " . ($lead['source_id'] ?: 0) . ") ORDER BY source_name ASC");
     $projects_result = mysqli_query($conn, "SELECT id, name FROM projects WHERE organization_id = $org_id AND (status = 1 OR id = " . ($lead['project_id'] ?: 0) . ") ORDER BY name ASC");
+    $custom_fields = getCustomFields($conn, $org_id);
+    $custom_data = getLeadCustomData($conn, $lead_id);
 } else {
     $users_result = $sources_result = $projects_result = false;
     if (!$error) $error = "Invalid session. Please login again.";
@@ -149,6 +162,15 @@ include 'includes/header.php';
                     <label class="form-label">Remarks / Notes</label>
                     <textarea name="remarks" class="form-control" rows="4"><?php echo htmlspecialchars($lead['remarks']); ?></textarea>
                 </div>
+                
+                <!-- Custom Fields -->
+                <?php foreach($custom_fields as $cf): 
+                    $val = $custom_data[$cf['id']] ?? '';
+                ?>
+                    <div style="grid-column: span 1;">
+                        <?php echo renderCustomField($cf, $val); ?>
+                    </div>
+                <?php endforeach; ?>
             </div>
             
             <div style="display: flex; gap: 1rem; margin-top: 1rem;">

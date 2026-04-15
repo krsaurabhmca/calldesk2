@@ -2,6 +2,7 @@
 // lead_add.php
 require_once 'config/db.php';
 require_once 'includes/auth.php';
+require_once 'includes/custom_fields_helper.php';
 checkAuth();
 
 $message = '';
@@ -36,6 +37,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 mysqli_query($conn, "UPDATE call_logs SET lead_id = $new_lead_id, is_converted = 1 WHERE id = $call_id AND organization_id = $org_id");
             }
             
+            // Handle Custom Fields
+            if (isset($_POST['custom'])) {
+                foreach ($_POST['custom'] as $field_id => $val) {
+                    $field_id = (int)$field_id;
+                    $val = mysqli_real_escape_string($conn, $val);
+                    mysqli_query($conn, "INSERT INTO lead_custom_data (lead_id, field_id, field_value) VALUES ($new_lead_id, $field_id, '$val')");
+                }
+            }
+            
             header("Location: leads.php?success=1");
             exit();
         } else {
@@ -55,6 +65,7 @@ if ($org_id) {
     $users_result = mysqli_query($conn, "SELECT id, name FROM users WHERE organization_id = $org_id AND status = 1 ORDER BY name ASC");
     $sources_result = mysqli_query($conn, "SELECT id, source_name FROM lead_sources WHERE organization_id = $org_id AND status = 1 ORDER BY source_name ASC");
     $projects_result = mysqli_query($conn, "SELECT id, name FROM projects WHERE organization_id = $org_id AND status = 1 ORDER BY name ASC");
+    $custom_fields = getCustomFields($conn, $org_id);
 } else {
     $users_result = $sources_result = $projects_result = false;
     if (!$error) $error = "Invalid session. Please login again.";
@@ -158,6 +169,13 @@ include 'includes/header.php';
                     <label class="form-label" style="font-size: 0.7rem; margin-bottom: 0.25rem;">Initial Remarks</label>
                     <textarea name="remarks" class="form-control" rows="2" style="font-size: 0.85rem; padding: 0.6rem 0.75rem;" placeholder="Notes about this lead..."></textarea>
                 </div>
+
+                <!-- Custom Fields -->
+                <?php foreach($custom_fields as $cf): ?>
+                    <div style="grid-column: span 1;">
+                        <?php echo renderCustomField($cf); ?>
+                    </div>
+                <?php endforeach; ?>
             </div>
             
             <div style="display: flex; gap: 0.75rem; margin-top: 1.25rem; border-top: 1px solid #f1f5f9; pt: 1.25rem; padding-top: 1.25rem;">

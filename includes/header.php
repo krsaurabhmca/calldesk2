@@ -88,6 +88,12 @@ $current_page = basename($_SERVER['PHP_SELF']);
                 <a href="<?php echo BASE_URL; ?>projects.php" class="nav-link <?php echo $current_page == 'projects.php' ? 'active' : ''; ?>">
                     <i class="fas fa-folder-tree"></i> <span>Project Categories</span>
                 </a>
+                <a href="<?php echo BASE_URL; ?>custom_fields.php" class="nav-link <?php echo $current_page == 'custom_fields.php' ? 'active' : ''; ?>">
+                    <i class="fas fa-list-check"></i> <span>Custom Fields</span>
+                </a>
+                <a href="<?php echo BASE_URL; ?>lead_import.php" class="nav-link <?php echo $current_page == 'lead_import.php' ? 'active' : ''; ?>">
+                    <i class="fas fa-file-import"></i> <span>Bulk Import</span>
+                </a>
                 <a href="<?php echo BASE_URL; ?>users.php" class="nav-link <?php echo $current_page == 'users.php' ? 'active' : ''; ?>">
                     <i class="fas fa-user-gear"></i> <span>Team Access</span>
                 </a>

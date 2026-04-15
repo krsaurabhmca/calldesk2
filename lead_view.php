@@ -2,6 +2,7 @@
 // lead_view.php
 require_once 'config/db.php';
 require_once 'includes/auth.php';
+require_once 'includes/custom_fields_helper.php';
 checkAuth();
 
 $lead_id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
@@ -42,6 +43,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_followup'])) {
 
 // Fetch Follow-up History
 $history_res = mysqli_query($conn, "SELECT f.*, u.name as executive_name FROM follow_ups f JOIN users u ON f.executive_id = u.id JOIN leads l ON f.lead_id = l.id WHERE f.lead_id = $lead_id AND l.organization_id = $org_id ORDER BY f.created_at DESC");
+
+// Fetch Custom Fields Data
+$custom_fields = getCustomFields($conn, $org_id);
+$custom_data = getLeadCustomData($conn, $lead_id);
 
 // Fetch Call Logs for this lead's number
 $lead_mobile = $lead['mobile'];
@@ -91,6 +96,23 @@ include 'includes/header.php';
                 </div>
             </div>
         </div>
+
+        <!-- Custom Fields Card -->
+        <?php if (!empty($custom_fields)): ?>
+        <div class="card" style="margin-bottom: 0;">
+            <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: 1.5rem; color: var(--primary);">Additional Information</h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <?php foreach($custom_fields as $cf): 
+                    $val = $custom_data[$cf['id']] ?? 'N/A';
+                ?>
+                <div>
+                    <label style="display: block; font-size: 0.75rem; color: var(--secondary); text-transform: uppercase; font-weight: 700; margin-bottom: 0.25rem;"><?php echo $cf['field_label']; ?></label>
+                    <div style="font-weight: 600;"><?php echo htmlspecialchars($val); ?></div>
+                </div>
+                <?php endforeach; ?>
+            </div>
+        </div>
+        <?php endif; ?>
 
         <!-- Follow-up Form -->
         <div class="card" style="margin-bottom: 0; background: #f8fafc; border: 1px dashed var(--gray-300);">
