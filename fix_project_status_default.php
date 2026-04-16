@@ -38,7 +38,15 @@ mysqli_query($conn, $sql_alter_sources);
 $sql_alter_users = "ALTER TABLE users MODIFY status TINYINT(1) DEFAULT 1";
 mysqli_query($conn, $sql_alter_users);
 
-echo "All tables (Projects, Lead Sources, Users) table schema updated: default status is now 1.\n";
+// 5. Add updated_at to leads table if not exists
+$sql_check_leads = "SHOW COLUMNS FROM leads LIKE 'updated_at'";
+$res_leads = mysqli_query($conn, $sql_check_leads);
+if (mysqli_num_rows($res_leads) == 0) {
+    mysqli_query($conn, "ALTER TABLE leads ADD COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP AFTER created_at");
+    echo "Added updated_at column to leads table.\n";
+}
+
+echo "All tables (Projects, Lead Sources, Users, Leads) table schema updated.\n";
 
 echo "Migration complete.\n";
 ?>

@@ -134,7 +134,7 @@ include 'includes/header.php';
                                 </div>
                                 <div class="info-item">
                                     <label>Last Updated</label>
-                                    <p><?php echo date('d M, h:i A', strtotime($lead['updated_at'])); ?></p>
+                                    <p><?php echo date('d M, h:i A', strtotime($lead['updated_at'] ?? $lead['created_at'])); ?></p>
                                 </div>
                             </div>
                         </div>
