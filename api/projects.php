@@ -33,6 +33,7 @@ if ($method === 'GET') {
         }
         $projects = [];
         while ($row = mysqli_fetch_assoc($result)) {
+            $row['status'] = (int) $row['status'];
             $projects[] = $row;
         }
         sendResponse(true, 'Projects fetched successfully', $projects);
@@ -88,7 +89,7 @@ if ($method === 'GET') {
             sendResponse(false, 'Organization ID is missing. Please contact support.', null, 400);
         }
 
-        $sql = "INSERT INTO projects (organization_id, name) VALUES ($org_id_val, '$name')";
+        $sql = "INSERT INTO projects (organization_id, name, status) VALUES ($org_id_val, '$name', 1)";
         if (mysqli_query($conn, $sql)) {
             sendResponse(true, 'Project added successfully', ['id' => mysqli_insert_id($conn)]);
         } else {

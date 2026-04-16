@@ -13,7 +13,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['add_source'])) {
         $name = mysqli_real_escape_string($conn, trim($_POST['source_name']));
         try {
-            if (mysqli_query($conn, "INSERT INTO lead_sources (organization_id, source_name) VALUES ($org_id, '$name')")) {
+            if (mysqli_query($conn, "INSERT INTO lead_sources (organization_id, source_name, status) VALUES ($org_id, '$name', 1)")) {
                 $message = "Source added successfully!";
             } else {
                 $error = "Failed to add source.";

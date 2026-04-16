@@ -7,10 +7,11 @@ $method = $_SERVER['REQUEST_METHOD'];
 $role = $auth_user['role'];
 
 if ($method === 'GET') {
-    $sql = "SELECT id, source_name FROM lead_sources WHERE organization_id = $org_id ORDER BY source_name ASC";
+    $sql = "SELECT id, source_name, status FROM lead_sources WHERE organization_id = $org_id ORDER BY source_name ASC";
     $result = mysqli_query($conn, $sql);
     $sources = [];
     while ($row = mysqli_fetch_assoc($result)) {
+        $row['status'] = (int) ($row['status'] ?? 1);
         $sources[] = $row;
     }
     sendResponse(true, 'Lead sources fetched successfully', $sources);
@@ -36,7 +37,7 @@ if ($method === 'GET') {
             sendResponse(false, 'Source name is required', null, 400);
         }
 
-        $sql = "INSERT INTO lead_sources (organization_id, source_name) VALUES ($org_id, '$name')";
+        $sql = "INSERT INTO lead_sources (organization_id, source_name, status) VALUES ($org_id, '$name', 1)";
         if (mysqli_query($conn, $sql)) {
             sendResponse(true, 'Lead source added successfully', ['id' => mysqli_insert_id($conn)]);
         } else {

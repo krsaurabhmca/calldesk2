@@ -19,7 +19,7 @@ if (!$org_id) {
 if (isset($_POST['add_project'])) {
     $name = mysqli_real_escape_string($conn, $_POST['name']);
     if (!empty($name)) {
-        $sql = "INSERT INTO projects (organization_id, name) VALUES ($org_id, '$name')";
+        $sql = "INSERT INTO projects (organization_id, name, status) VALUES ($org_id, '$name', 1)";
         if (mysqli_query($conn, $sql)) {
             $success = "Project category added successfully!";
         } else {
