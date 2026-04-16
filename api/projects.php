@@ -10,7 +10,7 @@ if ($method === 'GET') {
     $action = $_GET['action'] ?? 'list';
 
     if ($action === 'list') {
-        $org_id_val = (int)($org_id ?? 0);
+        $org_id_val = (int) ($org_id ?? 0);
         if ($org_id_val <= 0) {
             sendResponse(true, 'No projects found (invalid org)', []);
         }
@@ -43,7 +43,7 @@ if ($method === 'GET') {
             sendResponse(false, 'Unauthorized', null, 403);
         }
 
-        $org_id_val = (int)($org_id ?? 0);
+        $org_id_val = (int) ($org_id ?? 0);
         $sql = "SELECT u.id, u.name, GROUP_CONCAT(p.name SEPARATOR ', ') as project_names, 
                        GROUP_CONCAT(p.id SEPARATOR ',') as project_ids
                 FROM users u
@@ -83,9 +83,9 @@ if ($method === 'GET') {
             sendResponse(false, 'Project name is required', null, 400);
         }
 
-        $org_id_val = (int)($org_id ?? 0);
+        $org_id_val = (int) ($org_id ?? 0);
         if ($org_id_val <= 0) {
-             sendResponse(false, 'Organization ID is missing. Please contact support.', null, 400);
+            sendResponse(false, 'Organization ID is missing. Please contact support.', null, 400);
         }
 
         $sql = "INSERT INTO projects (organization_id, name) VALUES ($org_id_val, '$name')";
@@ -104,7 +104,7 @@ if ($method === 'GET') {
             sendResponse(false, 'Unauthorized', null, 403);
         }
 
-        $target_user_id = (int)($post_data['user_id'] ?? 0);
+        $target_user_id = (int) ($post_data['user_id'] ?? 0);
         $project_ids_str = $post_data['project_ids'] ?? ''; // Comma-separated IDs
 
         if ($target_user_id <= 0) {
@@ -116,7 +116,7 @@ if ($method === 'GET') {
         if (!empty($project_ids_str)) {
             $ids = explode(',', $project_ids_str);
             foreach ($ids as $pid) {
-                $pid = (int)$pid;
+                $pid = (int) $pid;
                 mysqli_query($conn, "INSERT INTO user_projects (user_id, project_id) VALUES ($target_user_id, $pid)");
             }
         }
@@ -126,9 +126,9 @@ if ($method === 'GET') {
         if ($role !== 'admin') {
             sendResponse(false, 'Unauthorized', null, 403);
         }
-        $id = (int)($post_data['id'] ?? 0);
-        $status = (int)($post_data['status'] ?? 0);
-        
+        $id = (int) ($post_data['id'] ?? 0);
+        $status = (int) ($post_data['status'] ?? 1);
+
         if (mysqli_query($conn, "UPDATE projects SET status = $status WHERE id = $id AND organization_id = $org_id")) {
             sendResponse(true, 'Project status updated');
         } else {
@@ -144,7 +144,7 @@ if ($method === 'GET') {
         sendResponse(false, 'Unauthorized', null, 403);
     }
 
-    $project_id = (int)($_GET['id'] ?? 0);
+    $project_id = (int) ($_GET['id'] ?? 0);
     if ($project_id <= 0) {
         sendResponse(false, 'Project ID is required', null, 400);
     }
