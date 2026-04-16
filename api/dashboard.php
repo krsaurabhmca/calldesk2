@@ -54,7 +54,7 @@ if ($role === 'admin') {
     $stats['today_followups'] = (int)mysqli_fetch_assoc($res)['cnt'];
 
     // Active Executives
-    $sql = "SELECT COUNT(*) as cnt FROM users WHERE organization_id = $org_id AND role = 'executive' AND status = 1";
+    $sql = "SELECT COUNT(*) as cnt FROM users WHERE organization_id = $org_id AND role = 'executive' AND (status = 1 OR status IS NULL)";
     $res = safe_query($conn, $sql);
     $stats['active_executives'] = (int)mysqli_fetch_assoc($res)['cnt'];
 
@@ -76,7 +76,7 @@ if ($role === 'admin') {
         (SELECT COUNT(*) FROM call_logs c WHERE c.executive_id = u.id AND c.type = 'Outgoing' AND DATE(c.call_time) = CURDATE()) as outgoing_calls,
         (SELECT COUNT(*) FROM follow_ups f WHERE f.executive_id = u.id AND DATE(f.next_follow_up_date) = CURDATE() AND f.is_completed = 0) as pending_tasks
         FROM users u 
-        WHERE u.organization_id = $org_id AND u.role = 'executive' AND u.status = 1";
+        WHERE u.organization_id = $org_id AND u.role = 'executive' AND (u.status = 1 OR u.status IS NULL)";
     $exec_res = safe_query($conn, $exec_stats_sql);
     $executive_performance = [];
     while($row = mysqli_fetch_assoc($exec_res)) $executive_performance[] = $row;

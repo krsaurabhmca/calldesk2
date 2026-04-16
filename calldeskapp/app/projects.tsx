@@ -130,18 +130,18 @@ export default function ProjectManagement() {
         setSaving(false);
     };
 
-    const handleToggleStatus = async (id: number, currentStatus: number) => {
-        const newStatus = currentStatus === 1 ? 0 : 1;
+    const handleToggleStatus = async (id: number, currentStatus: any) => {
+        const newStatus = (parseInt(currentStatus) === 1) ? 0 : 1;
         const res = await apiCall('projects.php', 'POST', {
             action: 'toggle_status',
             id: id,
             status: newStatus
         });
         if (res.success) {
-            showSnackbar('Status updated', 'success');
+            showSnackbar(res.message || 'Status updated', 'success');
             fetchData();
         } else {
-            showSnackbar(res.message, 'error');
+            showSnackbar(res.message || 'Failed to update status', 'error');
         }
     };
 
@@ -201,20 +201,20 @@ export default function ProjectManagement() {
                     contentContainerStyle={{ padding: 20 }}
                     refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
                     renderItem={({ item }) => (
-            <View style={[styles.projRow, item.status === 0 && { opacity: 0.6 , backgroundColor: '#fdf2f2'}]}>
-                <View style={styles.projInfo}>
-                    <View style={[styles.iconCircle, { backgroundColor: item.status === 1 ? (item.lead_count > 0 ? '#6366f1' : '#f5f3ff') : '#94a3b8' }]}>
-                        <Briefcase size={18} color={item.status === 1 && item.lead_count > 0 ? '#fff' : '#fff'} />
-                    </View>
-                    <View>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                            <Text style={styles.projName}>{item.name}</Text>
-                            <View style={[styles.statusTag, { backgroundColor: item.status === 1 ? '#dcfce7' : '#fee2e2' }]}>
-                                <Text style={[styles.statusTagText, { color: item.status === 1 ? '#15803d' : '#b91c1c' }]}>
-                                    {item.status === 1 ? 'Active' : 'Disabled'}
-                                </Text>
-                            </View>
+            <View style={[styles.projRow, parseInt(item.status) === 0 && { opacity: 0.8 , backgroundColor: '#fcfcfc'}]}>
+                    <View style={[styles.projInfo]}>
+                        <View style={[styles.iconCircle, { backgroundColor: parseInt(item.status) === 1 ? (item.lead_count > 0 ? '#6366f1' : '#f5f3ff') : '#f1f5f9' }]}>
+                            <Briefcase size={18} color={parseInt(item.status) === 1 && item.lead_count > 0 ? '#fff' : '#6366f1'} />
                         </View>
+                        <View>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                                <Text style={styles.projName}>{item.name}</Text>
+                                <View style={[styles.statusTag, { backgroundColor: parseInt(item.status) === 1 ? '#dcfce7' : '#fee2e2' }]}>
+                                    <Text style={[styles.statusTagText, { color: parseInt(item.status) === 1 ? '#15803d' : '#b91c1c' }]}>
+                                        {parseInt(item.status) === 1 ? 'Active' : 'Disabled'}
+                                    </Text>
+                                </View>
+                            </View>
                         <Text style={styles.projStats}>
                             {item.lead_count || 0} {item.lead_count === 1 ? 'Lead' : 'Leads'}
                         </Text>
@@ -222,10 +222,10 @@ export default function ProjectManagement() {
                 </View>
                 <View style={{ flexDirection: 'row', gap: 8 }}>
                     <TouchableOpacity 
-                        style={[styles.statusBtn, { backgroundColor: item.status === 1 ? '#fef3c7' : '#dcfce7' }]}
+                        style={[styles.statusBtn, { backgroundColor: parseInt(item.status) === 1 ? '#fef3c7' : '#dcfce7' }]}
                         onPress={() => handleToggleStatus(item.id, item.status)}
                     >
-                        <RefreshCcw size={16} color={item.status === 1 ? '#d97706' : '#15803d'} />
+                        <RefreshCcw size={16} color={parseInt(item.status) === 1 ? '#d97706' : '#15803d'} />
                     </TouchableOpacity>
                     <TouchableOpacity 
                         style={styles.deleteBtn}

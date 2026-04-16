@@ -11,7 +11,13 @@ if ($method === 'GET') {
     $result = mysqli_query($conn, $sql);
     $sources = [];
     while ($row = mysqli_fetch_assoc($result)) {
-        $row['status'] = (int) ($row['status'] ?? 1);
+        // Robust status check (case-insensitive)
+        $statusVal = null;
+        if (isset($row['status'])) $statusVal = $row['status'];
+        elseif (isset($row['Status'])) $statusVal = $row['Status'];
+        elseif (isset($row['STATUS'])) $statusVal = $row['STATUS'];
+        
+        $row['status'] = ($statusVal === null || $statusVal === '') ? 1 : (int)$statusVal;
         $sources[] = $row;
     }
     sendResponse(true, 'Lead sources fetched successfully', $sources);
@@ -22,13 +28,14 @@ if ($method === 'GET') {
     }
 
     // Support both Form Data and JSON
-    $input = json_decode(file_get_contents('php://input'), true);
+    $raw_input = file_get_contents('php://input');
+    $input = json_decode($raw_input, true);
     if ($input) {
         $action = $input['action'] ?? 'add';
         $post_data = $input;
     } else {
-        $action = $_POST['action'] ?? 'add';
-        $post_data = $_POST;
+        $post_data = array_merge($_POST, $_REQUEST);
+        $action = $post_data['action'] ?? 'add';
     }
 
     if ($action === 'add') {
@@ -61,14 +68,29 @@ if ($method === 'GET') {
     } elseif ($action === 'toggle_status') {
         $id = (int)($post_data['id'] ?? 0);
         $status = (int)($post_data['status'] ?? 0);
+        $org_id_val = (int) $org_id;
         
-        if (mysqli_query($conn, "UPDATE lead_sources SET status = $status WHERE id = $id AND organization_id = $org_id")) {
-            sendResponse(true, 'Source status updated');
+        if ($id <= 0) {
+            sendResponse(false, 'Invalid Source ID', null, 400);
+        }
+
+        $sql = "UPDATE lead_sources SET status = $status WHERE id = $id AND organization_id = $org_id_val";
+        if (mysqli_query($conn, $sql)) {
+            if (mysqli_affected_rows($conn) > 0) {
+                sendResponse(true, 'Source status updated successfully');
+            } else {
+                $check = mysqli_query($conn, "SELECT id FROM lead_sources WHERE id = $id AND organization_id = $org_id_val");
+                if (mysqli_num_rows($check) > 0) {
+                    sendResponse(true, 'Status is already set to this value');
+                } else {
+                    sendResponse(false, 'Source not found or unauthorized', null, 404);
+                }
+            }
         } else {
-            sendResponse(false, 'Failed to update status', null, 500);
+            sendResponse(false, 'Database Error: ' . mysqli_error($conn), null, 500);
         }
     } else {
-        sendResponse(false, 'Invalid action', null, 400);
+        sendResponse(false, 'Invalid action: ' . $action, null, 400);
     }
 } elseif ($method === 'DELETE') {
     // Also support native DELETE method

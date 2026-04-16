@@ -61,6 +61,7 @@ $sql = "SELECT p.*, (SELECT COUNT(*) FROM leads l WHERE l.project_id = p.id) as 
 $result = mysqli_query($conn, $sql);
 $projects = [];
 while ($row = mysqli_fetch_assoc($result)) {
+    $row['status'] = $row['status'] ?? 1; // Default to active if NULL
     $projects[] = $row;
 }
 ?>

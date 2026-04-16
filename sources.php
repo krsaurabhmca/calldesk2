@@ -103,6 +103,7 @@ include 'includes/header.php';
                 </thead>
                 <tbody>
                     <?php while ($row = mysqli_fetch_assoc($sources)): 
+                        $row['status'] = $row['status'] ?? 1; // Default to active if NULL
                         $sid = $row['id'];
                         $count_res = mysqli_query($conn, "SELECT COUNT(*) as count FROM leads WHERE source_id = $sid");
                         $count = mysqli_fetch_assoc($count_res)['count'];

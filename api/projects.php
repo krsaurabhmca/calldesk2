@@ -33,9 +33,22 @@ if ($method === 'GET') {
         }
         $projects = [];
         while ($row = mysqli_fetch_assoc($result)) {
-            $row['status'] = (int) $row['status'];
+            // Robust status check (case-insensitive)
+            $statusVal = null;
+            if (isset($row['status'])) $statusVal = $row['status'];
+            elseif (isset($row['Status'])) $statusVal = $row['Status'];
+            elseif (isset($row['STATUS'])) $statusVal = $row['STATUS'];
+            
+            // If still null or not set, default to 1 (Active)
+            $row['status'] = ($statusVal === null || $statusVal === '') ? 1 : (int)$statusVal;
+            
             $projects[] = $row;
         }
+        
+        // Final debug check to see what we are sending
+        $sample = count($projects) > 0 ? $projects[0] : 'empty';
+        file_put_contents('../scratch/debug_projects.log', "Fetch time: " . date('Y-m-d H:i:s') . "\nCount: " . count($projects) . "\nSample: " . json_encode($sample) . "\n\n", FILE_APPEND);
+        
         sendResponse(true, 'Projects fetched successfully', $projects);
 
     } elseif ($action === 'user_assignments') {
@@ -65,13 +78,16 @@ if ($method === 'GET') {
 
 } elseif ($method === 'POST') {
     // Read JSON body if available
-    $input = json_decode(file_get_contents('php://input'), true);
+    $raw_input = file_get_contents('php://input');
+    $input = json_decode($raw_input, true);
+    
     if ($input) {
         $action = $input['action'] ?? 'add';
         $post_data = $input;
     } else {
-        $action = $_POST['action'] ?? 'add';
-        $post_data = $_POST;
+        // Fallback to $_POST and then $_REQUEST
+        $post_data = array_merge($_POST, $_REQUEST);
+        $action = $post_data['action'] ?? 'add';
     }
 
     if ($action === 'add') {
@@ -125,15 +141,31 @@ if ($method === 'GET') {
         sendResponse(true, 'Projects assigned successfully');
     } elseif ($action === 'toggle_status') {
         if ($role !== 'admin') {
-            sendResponse(false, 'Unauthorized', null, 403);
+            sendResponse(false, 'Unauthorized: Admin access required', null, 403);
         }
         $id = (int) ($post_data['id'] ?? 0);
-        $status = (int) ($post_data['status'] ?? 1);
+        $status = (int) ($post_data['status'] ?? 0); // Default to 0 if not passed, but app sends it
+        $org_id_val = (int) $org_id;
 
-        if (mysqli_query($conn, "UPDATE projects SET status = $status WHERE id = $id AND organization_id = $org_id")) {
-            sendResponse(true, 'Project status updated');
+        if ($id <= 0) {
+            sendResponse(false, 'Invalid Project ID', null, 400);
+        }
+
+        $sql = "UPDATE projects SET status = $status WHERE id = $id AND organization_id = $org_id_val";
+        if (mysqli_query($conn, $sql)) {
+            if (mysqli_affected_rows($conn) > 0) {
+                sendResponse(true, 'Project status updated successfully');
+            } else {
+                // Check if project exists
+                $check = mysqli_query($conn, "SELECT id FROM projects WHERE id = $id AND organization_id = $org_id_val");
+                if (mysqli_num_rows($check) > 0) {
+                    sendResponse(true, 'Status is already set to this value');
+                } else {
+                    sendResponse(false, 'Project not found or unauthorized', null, 404);
+                }
+            }
         } else {
-            sendResponse(false, 'Failed to update status', null, 500);
+            sendResponse(false, 'Database Error: ' . mysqli_error($conn), null, 500);
         }
     } else {
         sendResponse(false, 'Invalid action specified: ' . $action, null, 400);

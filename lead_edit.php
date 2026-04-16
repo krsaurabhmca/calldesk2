@@ -71,8 +71,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 if ($org_id) {
     $users_result = mysqli_query($conn, "SELECT id, name FROM users WHERE organization_id = $org_id AND status = 1 ORDER BY name ASC");
-    $sources_result = mysqli_query($conn, "SELECT id, source_name FROM lead_sources WHERE organization_id = $org_id AND (status = 1 OR id = " . ($lead['source_id'] ?: 0) . ") ORDER BY source_name ASC");
-    $projects_result = mysqli_query($conn, "SELECT id, name FROM projects WHERE organization_id = $org_id AND (status = 1 OR id = " . ($lead['project_id'] ?: 0) . ") ORDER BY name ASC");
+    $sources_result = mysqli_query($conn, "SELECT id, source_name FROM lead_sources WHERE organization_id = $org_id AND (status = 1 OR status IS NULL OR id = " . ($lead['source_id'] ?: 0) . ") ORDER BY source_name ASC");
+    $projects_result = mysqli_query($conn, "SELECT id, name FROM projects WHERE organization_id = $org_id AND (status = 1 OR status IS NULL OR id = " . ($lead['project_id'] ?: 0) . ") ORDER BY name ASC");
     $custom_fields = getCustomFields($conn, $org_id);
     $custom_data = getLeadCustomData($conn, $lead_id);
 } else {

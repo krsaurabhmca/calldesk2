@@ -63,8 +63,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $org_id = getOrgId();
 if ($org_id) {
     $users_result = mysqli_query($conn, "SELECT id, name FROM users WHERE organization_id = $org_id AND status = 1 ORDER BY name ASC");
-    $sources_result = mysqli_query($conn, "SELECT id, source_name FROM lead_sources WHERE organization_id = $org_id AND status = 1 ORDER BY source_name ASC");
-    $projects_result = mysqli_query($conn, "SELECT id, name FROM projects WHERE organization_id = $org_id AND status = 1 ORDER BY name ASC");
+    $sources_result = mysqli_query($conn, "SELECT id, source_name FROM lead_sources WHERE organization_id = $org_id AND (status = 1 OR status IS NULL) ORDER BY source_name ASC");
+    $projects_result = mysqli_query($conn, "SELECT id, name FROM projects WHERE organization_id = $org_id AND (status = 1 OR status IS NULL) ORDER BY name ASC");
     $custom_fields = getCustomFields($conn, $org_id);
 } else {
     $users_result = $sources_result = $projects_result = false;
